@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Campus Interactive Map | Lakeview Academy</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --sky: #EEF4FF;
+    --path: #DDE3EE;
+    --grass: #D8EDDA;
+    --grass-deep: #B8D9BB;
+    --court: #C8D8F0;
+    --parking: #E8E4DC;
+    --water: #C2D9F0;
+    --academic: #3B5BDB;
+    --academic-light: #DBE4FF;
+    --science: #0B7285;
+    --science-light: #C5F6FA;
+    --sports: #2F9E44;
+    --sports-light: #D3F9D8;
+    --services: #E67700;
+    --services-light: #FFF3BF;
+    --cultural: #862E9C;
+    --cultural-light: #F3D9FA;
+    --health: #C92A2A;
+    --health-light: #FFE3E3;
+    --shadow: rgba(30,40,80,0.12);
+    --shadow-strong: rgba(30,40,80,0.22);
+    --text-dark: #1A1F36;
+    --text-mid: #4A5068;
+    --text-light: #7A829A;
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #1A1F36;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(20,24,46,0.94);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 24px; height: 56px;
+  }
+  #header h1 {
+    font-size: 16px; font-weight: 600; color: #fff; letter-spacing: 0.2px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  #header h1 span { font-weight: 300; opacity: 0.55; }
+  .header-badge {
+    font-size: 11px; font-weight: 500; padding: 3px 10px;
+    background: rgba(59,91,219,0.25); color: #98B4FF;
+    border: 1px solid rgba(59,91,219,0.35); border-radius: 20px;
+  }
+  .zoom-controls {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .zoom-btn {
+    width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06); color: #fff; font-size: 18px;
+    border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, border-color 0.15s; user-select: none;
+  }
+  .zoom-btn:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.2); }
+  #zoom-label {
+    font-size: 12px; color: rgba(255,255,255,0.45); min-width: 42px; text-align: center;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* ── MAP CANVAS ── */
+  #map-wrap {
+    position: fixed; inset: 56px 0 0 0;
+    overflow: hidden; cursor: grab;
+    background: #1A1F36;
+  }
+  #map-wrap.dragging { cursor: grabbing; }
+  #map-stage {
+    position: absolute;
+    transform-origin: 0 0;
+    will-change: transform;
+  }
+
+  /* ── BUILDING GROUPS ── */
+  .bld {
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .bld:hover .bld-face { filter: brightness(1.08); }
+  .bld:hover .bld-shadow { opacity: 0.5; }
+  .bld-shadow { opacity: 0.25; transition: opacity 0.15s; }
+  .bld-face { transition: filter 0.15s; }
+
+  /* ── TOOLTIP POPUP ── */
+  #popup {
+    position: absolute; z-index: 200;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(20,24,80,0.18), 0 2px 8px rgba(20,24,80,0.1);
+    width: 280px;
+    pointer-events: all;
+    transform-origin: bottom center;
+    animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1) forwards;
+    display: none;
+    overflow: hidden;
+  }
+  #popup.visible { display: block; }
+  @keyframes popIn {
+    from { opacity: 0; transform: translateY(8px) scale(0.94); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  .popup-header {
+    padding: 16px 16px 12px;
+    border-bottom: 1px solid #F0F2F8;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .popup-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .popup-title { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
+  .popup-type  { font-size: 11px; font-weight: 500; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .popup-body  { padding: 12px 16px; }
+  .popup-meta  { display: flex; flex-direction: column; gap: 6px; }
+  .popup-row   { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-mid); }
+  .popup-row svg { flex-shrink: 0; opacity: 0.6; }
+  .popup-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.5; margin-top: 8px; }
+  .popup-footer {
+    padding: 10px 16px 14px;
+    display: flex; gap: 8px;
+  }
+  .btn-close {
+    flex: 1; height: 34px; border-radius: 8px;
+    border: 1px solid #E8EBF4; background: #fff;
+    font-size: 12px; font-weight: 500; color: var(--text-mid);
+    cursor: pointer; transition: background 0.12s;
+  }
+  .btn-close:hover { background: #F4F6FF; }
+  .btn-detail {
+    flex: 2; height: 34px; border-radius: 8px;
+    border: none;
+    font-size: 12px; font-weight: 600; color: #fff;
+    cursor: pointer; transition: filter 0.12s, transform 0.1s;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+  }
+  .btn-detail:hover { filter: brightness(1.1); }
+  .btn-detail:active { transform: scale(0.97); }
+  .popup-arrow {
+    position: absolute; bottom: -9px; left: 50%;
+    transform: translateX(-50%);
+    width: 18px; height: 10px;
+    overflow: visible;
+  }
+
+  /* ── DETAIL PAGE ── */
+  #detail-page {
+    position: fixed; inset: 0; z-index: 500;
+    background: #F8F9FC;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  }
+  #detail-page.open { transform: translateY(0); }
+
+  .detail-hero {
+    position: relative; height: 220px;
+    display: flex; align-items: flex-end;
+    padding: 24px 32px;
+    overflow: hidden;
+  }
+  .detail-hero-bg {
+    position: absolute; inset: 0;
+    opacity: 0.12;
+    font-size: 260px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1; user-select: none;
+  }
+  .detail-back {
+    position: absolute; top: 20px; left: 24px;
+    width: 40px; height: 40px; border-radius: 12px;
+    background: rgba(255,255,255,0.2); backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff; font-size: 20px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .detail-back:hover { background: rgba(255,255,255,0.3); }
+  .detail-hero-content { position: relative; z-index: 1; color: #fff; }
+  .detail-hero-badge {
+    font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px;
+    background: rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 4px 12px; border-radius: 20px;
+    display: inline-block; margin-bottom: 10px;
+  }
+  .detail-hero h2 { font-size: 26px; font-weight: 600; line-height: 1.2; margin: 0; }
+  .detail-hero p  { font-size: 14px; opacity: 0.82; margin-top: 4px; }
+
+  .detail-body { max-width: 860px; margin: 0 auto; padding: 28px 32px 60px; }
+  .detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 28px; }
+  .detail-stat {
+    background: #fff; border: 1px solid #E8EBF4; border-radius: 14px; padding: 16px;
+  }
+  .detail-stat label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); }
+  .detail-stat p { font-size: 18px; font-weight: 600; color: var(--text-dark); margin-top: 4px; }
+
+  .detail-section { margin-bottom: 28px; }
+  .detail-section h3 { font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;
+    padding-bottom: 8px; border-bottom: 1px solid #E8EBF4; }
+  .detail-section p { font-size: 14px; color: var(--text-mid); line-height: 1.65; }
+
+  .detail-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .detail-list li {
+    background: #fff; border: 1px solid #E8EBF4; border-radius: 10px;
+    padding: 12px 14px; font-size: 13px; color: var(--text-mid);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .detail-list li strong { color: var(--text-dark); font-weight: 500; min-width: 120px; }
+
+  .detail-hours { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .hour-row {
+    background: #fff; border: 1px solid #E8EBF4; border-radius: 10px;
+    padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px;
+  }
+  .hour-row .day { color: var(--text-mid); }
+  .hour-row .time { font-weight: 500; color: var(--text-dark); font-family: 'DM Mono', monospace; font-size: 12px; }
+
+  /* ── LEGEND ── */
+  #legend {
+    position: fixed; bottom: 20px; left: 20px; z-index: 100;
+    background: rgba(20,24,46,0.88); backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px; padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 7px;
+  }
+  .legend-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
+  .legend-item  { display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(255,255,255,0.7); }
+  .legend-dot   { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+  /* ── COMPASS ── */
+  #compass {
+    position: fixed; bottom: 20px; right: 20px; z-index: 100;
+    width: 52px; height: 52px;
+  }
+
+  /* ── MINI LABEL ── */
+  .map-label { font-family: 'DM Sans', sans-serif; pointer-events: none; }
+
+  @media (max-width: 600px) {
+    .detail-grid { grid-template-columns: 1fr 1fr; }
+    .detail-body { padding: 20px 16px 60px; }
+    .detail-hero { padding: 20px 16px; }
+    #legend { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="header">
+  <h1>🎓 Lakeview Academy <span>/ Campus Map</span></h1>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="header-badge">Interactive</span>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="window.changeZoom(-0.2)">−</button>
+      <span id="zoom-label">100%</span>
+      <button class="zoom-btn" onclick="window.changeZoom(0.2)">+</button>
+      <button class="zoom-btn" onclick="window.resetView()" style="font-size:13px;">⌂</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAP -->
+<div id="map-wrap">
+  <div id="map-stage">
+    <svg id="campus-svg" width="1400" height="1000" viewBox="0 0 1400 1000"
+         xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="bld-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="3" dy="4" stdDeviation="5" flood-color="#1A2050" flood-opacity="0.25"/>
+        </filter>
+        <pattern id="grass-pat" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="#C8DFCA"/>
+          <line x1="0" y1="10" x2="20" y2="10" stroke="#B8D0BA" stroke-width="0.5" opacity="0.5"/>
+          <line x1="10" y1="0" x2="10" y2="20" stroke="#B8D0BA" stroke-width="0.5" opacity="0.5"/>
+        </pattern>
+        <pattern id="path-pat" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
+          <rect width="12" height="12" fill="#D8DDE8"/>
+          <line x1="0" y1="6" x2="12" y2="6" stroke="#CCD1DC" stroke-width="0.4" opacity="0.6"/>
+        </pattern>
+      </defs>
+
+      <!-- GROUND -->
+      <rect x="0" y="0" width="1400" height="1000" fill="#C4CCDA"/>
+
+      <!-- OUTER CAMPUS BOUNDARY -->
+      <rect x="30" y="30" width="1340" height="940" rx="20"
+            fill="#D4DBE6" stroke="#B0BAC8" stroke-width="1.5"/>
+
+      <!-- GRASS AREAS -->
+      <rect x="60" y="60" width="1280" height="880" rx="14" fill="url(#grass-pat)"/>
+
+      <!-- MAIN ROADS (horizontal + vertical) -->
+      <rect x="60" y="460" width="1280" height="56" fill="url(#path-pat)" rx="4"/>
+      <rect x="620" y="60"  width="56"  height="880" fill="url(#path-pat)" rx="4"/>
+      <!-- secondary paths -->
+      <rect x="60"  y="240" width="620" height="32" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="676" y="240" width="664" height="32" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="60"  y="680" width="560" height="28" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="676" y="680" width="664" height="28" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="300" y="60"  width="32"  height="400" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="300" y="516" width="32"  height="424" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="920" y="60"  width="32"  height="400" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+      <rect x="920" y="516" width="32"  height="424" fill="url(#path-pat)" rx="3" opacity="0.7"/>
+
+      <!-- SPORTS FIELD (large green) -->
+      <rect x="80" y="720" width="480" height="200" rx="10" fill="#A8D5A2" stroke="#7EBA78" stroke-width="1.2"/>
+      <ellipse cx="320" cy="820" rx="180" ry="80" fill="none" stroke="#7EBA78" stroke-width="1" opacity="0.6"/>
+      <line x1="320" y1="720" x2="320" y2="920" stroke="#7EBA78" stroke-width="1" opacity="0.5"/>
+      <text x="320" y="820" text-anchor="middle" dominant-baseline="central"
+            font-family="DM Sans,sans-serif" font-size="13" fill="#4A8A44" font-weight="500" opacity="0.8">⚽ Sports Field</text>
+
+      <!-- BASKETBALL COURTS -->
+      <rect x="680" y="720" width="200" height="100" rx="6" fill="#B0C8E8" stroke="#7EA8CC" stroke-width="1.2"/>
+      <line x1="780" y1="720" x2="780" y2="820" stroke="#7EA8CC" stroke-width="0.8" opacity="0.7"/>
+      <circle cx="730" cy="770" r="18" fill="none" stroke="#7EA8CC" stroke-width="0.8" opacity="0.6"/>
+      <circle cx="830" cy="770" r="18" fill="none" stroke="#7EA8CC" stroke-width="0.8" opacity="0.6"/>
+      <text x="780" y="838" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" fill="#4A6A8A" opacity="0.8">🏀 Courts</text>
+
+      <!-- SWIMMING POOL -->
+      <rect x="900" y="720" width="160" height="100" rx="16" fill="#8EC8F0" stroke="#5AAEDC" stroke-width="1.2"/>
+      <rect x="914" y="734" width="132" height="72" rx="12" fill="none" stroke="#5AAEDC" stroke-width="0.7" opacity="0.5" stroke-dasharray="4 3"/>
+      <text x="980" y="775" text-anchor="middle" dominant-baseline="central"
+            font-family="DM Sans,sans-serif" font-size="11" fill="#1A6A9A">🏊 Pool</text>
+
+      <!-- PARKING LOTS -->
+      <rect x="1100" y="720" width="220" height="200" rx="6" fill="#E0DBD0" stroke="#C0BAB0" stroke-width="1"/>
+      <line x1="1110" y1="740" x2="1110" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
+      <line x1="1140" y1="740" x2="1140" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
+      <line x1="1170" y1="740" x2="1170" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
+      <line x1="1200" y1="740" x2="1200" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
+      <line x1="1230" y1="740" x2="1230" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
+      <line x1="1260" y1="740" x2="1260" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
+      <text x="1210" y="916" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="12" fill="#7A7060" opacity="0.9">🅿 Parking</text>
+
+      <!-- GARDEN / COURTYARD -->
+      <rect x="680" y="840" width="380" height="100" rx="10" fill="#B8E0B0" stroke="#88C080" stroke-width="1"/>
+      <circle cx="760" cy="890" r="22" fill="#90C888" stroke="#68A860" stroke-width="1"/>
+      <circle cx="870" cy="888" r="18" fill="#90C888" stroke="#68A860" stroke-width="1"/>
+      <circle cx="970" cy="890" r="20" fill="#90C888" stroke="#68A860" stroke-width="1"/>
+      <text x="870" y="930" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" fill="#3A6834" opacity="0.9">🌿 Garden & Amphitheater</text>
+
+      <!-- ═══ BUILDINGS ═══ -->
+
+      <!-- 1. ADMINISTRATION BUILDING -->
+      <g class="bld" data-id="admin" onclick="window.showPopup(event,'admin')">
+        <rect class="bld-shadow" x="458" y="74" width="200" height="140" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="450" y="68" width="200" height="140" rx="10"
+              fill="#3B5BDB" stroke="#2748C8" stroke-width="1.5"/>
+        <rect x="450" y="68" width="200" height="32" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="450" y="88" width="200" height="12" fill="rgba(255,255,255,0.07)"/>
+        <!-- windows -->
+        <rect x="466" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="498" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="530" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="562" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="594" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="466" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="498" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="530" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="562" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="594" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <!-- door -->
+        <rect x="530" y="162" width="40" height="46" rx="4" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <!-- label -->
+        <text x="550" y="150" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🏛 Admin</text>
+      </g>
+
+      <!-- 2. LIBRARY -->
+      <g class="bld" data-id="library" onclick="window.showPopup(event,'library')">
+        <rect class="bld-shadow" x="768" y="74" width="170" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="760" y="68" width="170" height="130" rx="10"
+              fill="#0B7285" stroke="#087A96" stroke-width="1.5"/>
+        <rect x="760" y="68" width="170" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="776" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="806" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="836" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="866" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="776" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="806" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="836" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="866" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="824" y="152" width="34" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="845" y="142" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">📚 Library</text>
+      </g>
+
+      <!-- 3. SCIENCE & TECH BUILDING -->
+      <g class="bld" data-id="science" onclick="window.showPopup(event,'science')">
+        <rect class="bld-shadow" x="968" y="74" width="160" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="960" y="68" width="160" height="130" rx="10"
+              fill="#2F9E44" stroke="#278A3A" stroke-width="1.5"/>
+        <rect x="960" y="68" width="160" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="976" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1004" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1032" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1060" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="976" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1004" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1032" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1060" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1024" y="152" width="32" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="1040" y="142" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🔬 Science</text>
+      </g>
+
+      <!-- 4. GYMNASIUM -->
+      <g class="bld" data-id="gym" onclick="window.showPopup(event,'gym')">
+        <rect class="bld-shadow" x="88" y="74" width="180" height="140" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="80" y="68" width="180" height="140" rx="10"
+              fill="#1971C2" stroke="#1565A8" stroke-width="1.5"/>
+        <rect x="80" y="68" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="96" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="128" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="160" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="192" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="96" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="128" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="160" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="192" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="150" y="162" width="40" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="170" y="150" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🏋 Gymnasium</text>
+      </g>
+
+      <!-- 5. ARTS BUILDING -->
+      <g class="bld" data-id="arts" onclick="window.showPopup(event,'arts')">
+        <rect class="bld-shadow" x="88" y="280" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="80" y="274" width="180" height="130" rx="10"
+              fill="#862E9C" stroke="#731888" stroke-width="1.5"/>
+        <rect x="80" y="274" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="96" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="128" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="160" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="192" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="96" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="128" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="160" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="150" y="358" width="40" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="170" y="348" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🎨 Arts</text>
+      </g>
+
+      <!-- 6. CAFETERIA -->
+      <g class="bld" data-id="cafeteria" onclick="window.showPopup(event,'cafeteria')">
+        <rect class="bld-shadow" x="408" y="280" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="400" y="274" width="180" height="130" rx="10"
+              fill="#E67700" stroke="#CC6800" stroke-width="1.5"/>
+        <rect x="400" y="274" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="416" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="448" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="480" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="512" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="544" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="416" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="448" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="480" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="512" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="460" y="358" width="60" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="490" y="348" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🍽 Cafeteria</text>
+      </g>
+
+      <!-- 7. CHAPEL -->
+      <g class="bld" data-id="chapel" onclick="window.showPopup(event,'chapel')">
+        <rect class="bld-shadow" x="768" y="280" width="140" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="760" y="274" width="140" height="130" rx="10"
+              fill="#C92A2A" stroke="#B02020" stroke-width="1.5"/>
+        <rect x="760" y="274" width="140" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <!-- cross on roof -->
+        <rect x="823" y="258" width="14" height="32" rx="2" fill="#A01818"/>
+        <rect x="815" y="265" width="30" height="10" rx="2" fill="#A01818"/>
+        <rect x="776" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="804" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="832" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="860" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="798" y="358" width="44" height="46" rx="4" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="830" y="348" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">⛪ Chapel</text>
+      </g>
+
+      <!-- 8. HEALTH CENTER -->
+      <g class="bld" data-id="health" onclick="window.showPopup(event,'health')">
+        <rect class="bld-shadow" x="968" y="280" width="160" height="120" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="960" y="274" width="160" height="120" rx="10"
+              fill="#D63939" stroke="#C02A2A" stroke-width="1.5"/>
+        <rect x="960" y="274" width="160" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <!-- red cross -->
+        <rect x="1027" y="260" width="26" height="26" rx="3" fill="#fff" opacity="0.9"/>
+        <rect x="1032" y="263" width="16" height="20" rx="1" fill="#D63939"/>
+        <rect x="1029" y="266" width="22" height="14" rx="1" fill="#D63939"/>
+        <rect x="976" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1004" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1032" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1060" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1024" y="348" width="32" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="1040" y="340" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🏥 Health Center</text>
+      </g>
+
+      <!-- 9. STUDENT CENTER -->
+      <g class="bld" data-id="student" onclick="window.showPopup(event,'student')">
+        <rect class="bld-shadow" x="408" y="516" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="400" y="510" width="180" height="130" rx="10"
+              fill="#F06595" stroke="#DC4A80" stroke-width="1.5"/>
+        <rect x="400" y="510" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="416" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="448" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="480" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="512" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="544" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="416" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="448" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="480" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="460" y="594" width="60" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="490" y="582" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🎓 Student Center</text>
+      </g>
+
+      <!-- 10. ENGINEERING / COMPUTER LAB -->
+      <g class="bld" data-id="engineering" onclick="window.showPopup(event,'engineering')">
+        <rect class="bld-shadow" x="88" y="516" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="80" y="510" width="180" height="130" rx="10"
+              fill="#495057" stroke="#383D42" stroke-width="1.5"/>
+        <rect x="80" y="510" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="96" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="128" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="160" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="192" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="96" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="128" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="160" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="150" y="594" width="40" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="170" y="584" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">💻 Eng. Lab</text>
+      </g>
+
+      <!-- 11. AUDITORIUM -->
+      <g class="bld" data-id="auditorium" onclick="window.showPopup(event,'auditorium')">
+        <rect class="bld-shadow" x="688" y="516" width="200" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="680" y="510" width="200" height="130" rx="10"
+              fill="#5C7CFA" stroke="#4B6AE8" stroke-width="1.5"/>
+        <rect x="680" y="510" width="200" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="696" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="726" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="756" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="786" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="816" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="696" y="546" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="726" y="546" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="756" y="546" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="760" y="594" width="60" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="780" y="584" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🎭 Auditorium</text>
+      </g>
+
+      <!-- 12. FACULTY OFFICES -->
+      <g class="bld" data-id="faculty" onclick="window.showPopup(event,'faculty')">
+        <rect class="bld-shadow" x="968" y="516" width="160" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
+        <rect class="bld-face" x="960" y="510" width="160" height="130" rx="10"
+              fill="#20C997" stroke="#16A880" stroke-width="1.5"/>
+        <rect x="960" y="510" width="160" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
+        <rect x="976" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1004" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1032" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="1060" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
+        <rect x="976" y="546" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1004" y="546" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1032" y="546" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
+        <rect x="1024" y="594" width="32" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
+        <text x="1040" y="584" text-anchor="middle" dominant-baseline="central" class="map-label"
+              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">👨‍🏫 Faculty</text>
+      </g>
+
+      <!-- COMPASS ROSE (decorative, top-right) -->
+      <g transform="translate(1310,100)" opacity="0.6">
+        <circle cx="0" cy="0" r="28" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>
+        <polygon points="0,-24 5,-8 0,-12 -5,-8" fill="rgba(255,255,255,0.8)"/>
+        <polygon points="0,24 5,8 0,12 -5,8" fill="rgba(255,255,255,0.4)"/>
+        <polygon points="24,0 8,5 12,0 8,-5" fill="rgba(255,255,255,0.4)"/>
+        <polygon points="-24,0 -8,5 -12,0 -8,-5" fill="rgba(255,255,255,0.4)"/>
+        <text x="0" y="-32" text-anchor="middle" font-family="DM Sans,sans-serif"
+              font-size="10" fill="rgba(255,255,255,0.7)" font-weight="600">N</text>
+        <text x="0" y="42" text-anchor="middle" font-family="DM Sans,sans-serif"
+              font-size="9" fill="rgba(255,255,255,0.4)">S</text>
+        <text x="32" y="4" text-anchor="start" font-family="DM Sans,sans-serif"
+              font-size="9" fill="rgba(255,255,255,0.4)">E</text>
+        <text x="-32" y="4" text-anchor="end" font-family="DM Sans,sans-serif"
+              font-size="9" fill="rgba(255,255,255,0.4)">W</text>
+      </g>
+
+      <!-- SCALE BAR -->
+      <g transform="translate(80,960)" opacity="0.55">
+        <line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+        <line x1="0" y1="-5" x2="0" y2="5" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+        <line x1="100" y1="-5" x2="100" y2="5" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+        <text x="50" y="-8" text-anchor="middle" font-family="DM Sans,sans-serif"
+              font-size="10" fill="rgba(255,255,255,0.7)">100m</text>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<!-- POPUP -->
+<div id="popup">
+  <div class="popup-header">
+    <div class="popup-icon" id="p-icon"></div>
+    <div>
+      <div class="popup-title" id="p-title"></div>
+      <div class="popup-type" id="p-type"></div>
+    </div>
+  </div>
+  <div class="popup-body">
+    <div class="popup-meta" id="p-meta"></div>
+    <div class="popup-desc" id="p-desc"></div>
+  </div>
+  <div class="popup-footer">
+    <button class="btn-close" onclick="window.closePopup()">✕ Close</button>
+    <button class="btn-detail" id="p-btn" onclick="window.openDetail()">View Details →</button>
+  </div>
+</div>
+
+<!-- DETAIL PAGE -->
+<div id="detail-page">
+  <div class="detail-hero" id="d-hero">
+    <div class="detail-hero-bg" id="d-hero-emoji"></div>
+    <button class="detail-back" onclick="window.closeDetail()">←</button>
+    <div class="detail-hero-content">
+      <div class="detail-hero-badge" id="d-badge"></div>
+      <h2 id="d-name"></h2>
+      <p id="d-sub"></p>
+    </div>
+  </div>
+  <div class="detail-body">
+    <div class="detail-grid" id="d-stats"></div>
+    <div class="detail-section">
+      <h3>About</h3>
+      <p id="d-about"></p>
+    </div>
+    <div class="detail-section" id="d-services-sec">
+      <h3>Services & Facilities</h3>
+      <ul class="detail-list" id="d-services"></ul>
+    </div>
+    <div class="detail-section">
+      <h3>Operating Hours</h3>
+      <div class="detail-hours" id="d-hours"></div>
+    </div>
+    <div class="detail-section" id="d-contact-sec">
+      <h3>Contact</h3>
+      <ul class="detail-list" id="d-contact"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div id="legend">
+  <div class="legend-title">Building Types</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3B5BDB"></div> Administration</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0B7285"></div> Academic</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2F9E44"></div> Science</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#E67700"></div> Student Services</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#862E9C"></div> Arts & Culture</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1971C2"></div> Sports & Fitness</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#D63939"></div> Health & Chapel</div>
+</div>
+
+<script>
+(function() {
+  const BUILDINGS = {
+    admin: {
+      name: "Administration Building",
+      emoji: "🏛",
+      type: "Administration",
+      typeColor: "#3B5BDB",
+      typeBg: "#DBE4FF",
+      sub: "Main campus hub & offices",
+      floors: "3",
+      capacity: "500",
+      year: "1998",
+      about: "The Administration Building is the heart of Lakeview Academy, housing the offices of the Principal, Vice Principals, Registrar, and all key administrative departments. Designed in classical collegiate style, the building serves as the first point of contact for students, parents, and visitors.",
+      services: [
+        { label: "Registrar's Office", val: "Enrollment, records, credentials" },
+        { label: "Principal's Office", val: "3rd Floor, Suite 301" },
+        { label: "Finance Office", val: "Tuition, billing, scholarships" },
+        { label: "HR Department", val: "Faculty & staff services" },
+        { label: "Conference Rooms", val: "4 rooms, 10–50 capacity" },
+      ],
+      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 6:00 PM",
+               Thu: "7:00 AM – 6:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "8:00 AM – 12:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Main Line", val: "(02) 8123-4567" },
+        { label: "Email", val: "admin@lakeview.edu.ph" },
+        { label: "Fax", val: "(02) 8123-4568" },
+      ],
+    },
+    library: {
+      name: "Library & Learning Center",
+      emoji: "📚",
+      type: "Academic",
+      typeColor: "#0B7285",
+      typeBg: "#C5F6FA",
+      sub: "Knowledge hub & digital resources",
+      floors: "2",
+      capacity: "300",
+      year: "2004",
+      about: "The Lakeview Library & Learning Center is a modern two-floor facility with over 45,000 physical volumes, digital databases, and dedicated study spaces. It provides a quiet, inspiring environment for research, reading, and collaborative learning.",
+      services: [
+        { label: "Print Collection", val: "45,000+ books & journals" },
+        { label: "Digital Library", val: "Online databases & e-books" },
+        { label: "Study Rooms", val: "8 private rooms, reservable online" },
+        { label: "Computer Lab", val: "40 workstations, free printing" },
+        { label: "Reading Lounge", val: "Comfortable seating, quiet zone" },
+      ],
+      hours: { Mon: "7:30 AM – 7:00 PM", Tue: "7:30 AM – 7:00 PM", Wed: "7:30 AM – 7:00 PM",
+               Thu: "7:30 AM – 7:00 PM", Fri: "7:30 AM – 6:00 PM", Sat: "8:00 AM – 4:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Library Desk", val: "(02) 8123-4580" },
+        { label: "Email", val: "library@lakeview.edu.ph" },
+        { label: "Renewals", val: "library.lakeview.edu.ph" },
+      ],
+    },
+    science: {
+      name: "Science & Technology Building",
+      emoji: "🔬",
+      type: "Science",
+      typeColor: "#2F9E44",
+      typeBg: "#D3F9D8",
+      sub: "Laboratories & innovation",
+      floors: "3",
+      capacity: "400",
+      year: "2010",
+      about: "The Science & Technology Building houses cutting-edge laboratories for Biology, Chemistry, Physics, and Computer Science. It supports project-based learning and research initiatives, with modern equipment and dedicated faculty mentorship spaces.",
+      services: [
+        { label: "Biology Lab", val: "Fully equipped, BSL-1 certified" },
+        { label: "Chemistry Lab", val: "Fume hoods, glassware, reagents" },
+        { label: "Physics Lab", val: "Optics, mechanics, electronics" },
+        { label: "Computer Lab", val: "60 iMacs + Windows workstations" },
+        { label: "Research Hub", val: "Faculty-student project spaces" },
+      ],
+      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 6:00 PM",
+               Thu: "7:00 AM – 6:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "9:00 AM – 1:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Science Dept.", val: "(02) 8123-4570" },
+        { label: "Email", val: "science@lakeview.edu.ph" },
+        { label: "Lab Booking", val: "labs.lakeview.edu.ph" },
+      ],
+    },
+    gym: {
+      name: "Gymnasium & Fitness Center",
+      emoji: "🏋",
+      type: "Sports & Fitness",
+      typeColor: "#1971C2",
+      typeBg: "#D0EBFF",
+      sub: "Sports, PE, and wellness",
+      floors: "2",
+      capacity: "600",
+      year: "2002",
+      about: "The Lakeview Gymnasium is a multi-purpose sports facility that hosts Physical Education classes, inter-school competitions, and school-wide events. The second floor houses a modern fitness center with cardio machines, free weights, and wellness programs.",
+      services: [
+        { label: "Main Gym Floor", val: "Basketball, volleyball, badminton" },
+        { label: "Fitness Center", val: "2nd Floor – open to students" },
+        { label: "Locker Rooms", val: "Separate M/F, shower facilities" },
+        { label: "PE Storage", val: "Equipment checkout available" },
+        { label: "Dance Studio", val: "Sprung floor, mirrors, sound system" },
+      ],
+      hours: { Mon: "6:00 AM – 8:00 PM", Tue: "6:00 AM – 8:00 PM", Wed: "6:00 AM – 8:00 PM",
+               Thu: "6:00 AM – 8:00 PM", Fri: "6:00 AM – 7:00 PM", Sat: "7:00 AM – 5:00 PM", Sun: "9:00 AM – 2:00 PM" },
+      contact: [
+        { label: "PE Department", val: "(02) 8123-4575" },
+        { label: "Email", val: "pe@lakeview.edu.ph" },
+      ],
+    },
+    arts: {
+      name: "Arts & Music Building",
+      emoji: "🎨",
+      type: "Arts & Culture",
+      typeColor: "#862E9C",
+      typeBg: "#F3D9FA",
+      sub: "Creative arts, music & theater",
+      floors: "2",
+      capacity: "250",
+      year: "2006",
+      about: "The Arts & Music Building fosters creativity and self-expression. It houses Visual Arts studios, Music practice rooms, a black-box Theater space, and the school's award-winning Fine Arts gallery open to the public during exhibit seasons.",
+      services: [
+        { label: "Visual Arts Studios", val: "Painting, sculpture, digital art" },
+        { label: "Music Practice Rooms", val: "8 soundproofed rooms" },
+        { label: "Black-Box Theater", val: "100-seat flexible performance space" },
+        { label: "Gallery Space", val: "Rotating student exhibitions" },
+        { label: "Recording Studio", val: "By appointment only" },
+      ],
+      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 7:00 PM",
+               Thu: "7:00 AM – 7:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "9:00 AM – 3:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Arts Dept.", val: "(02) 8123-4572" },
+        { label: "Email", val: "arts@lakeview.edu.ph" },
+      ],
+    },
+    cafeteria: {
+      name: "Cafeteria & Dining Hall",
+      emoji: "🍽",
+      type: "Student Services",
+      typeColor: "#E67700",
+      typeBg: "#FFF3BF",
+      sub: "Food court, nutrition & dining",
+      floors: "1",
+      capacity: "450",
+      year: "2001",
+      about: "Lakeview's Cafeteria provides nutritious, affordable meals for the entire campus community. With multiple food stations including Filipino favorites, a salad bar, and a halal section, it caters to diverse dietary needs. The spacious dining hall also doubles as an event space.",
+      services: [
+        { label: "Main Kitchen", val: "Hot meals, daily rotating menu" },
+        { label: "Snack Bar", val: "Sandwiches, pastries, beverages" },
+        { label: "Salad & Health Bar", val: "Fresh options, vegan-friendly" },
+        { label: "Halal Section", val: "Certified Halal kitchen" },
+        { label: "Catering Services", val: "Campus events & parties" },
+      ],
+      hours: { Mon: "6:30 AM – 5:30 PM", Tue: "6:30 AM – 5:30 PM", Wed: "6:30 AM – 5:30 PM",
+               Thu: "6:30 AM – 5:30 PM", Fri: "6:30 AM – 5:00 PM", Sat: "7:00 AM – 2:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Dining Services", val: "(02) 8123-4585" },
+        { label: "Email", val: "dining@lakeview.edu.ph" },
+        { label: "Catering", val: "catering@lakeview.edu.ph" },
+      ],
+    },
+    chapel: {
+      name: "Lakeview Chapel",
+      emoji: "⛪",
+      type: "Religious & Cultural",
+      typeColor: "#C92A2A",
+      typeBg: "#FFE3E3",
+      sub: "Interfaith worship & reflection",
+      floors: "1",
+      capacity: "200",
+      year: "1990",
+      about: "The Lakeview Chapel is a sacred space welcoming all faiths and beliefs. It hosts regular Catholic Mass, ecumenical services, and quiet reflection times. The Chapel is also available for blessings, prayer gatherings, and spiritual counseling through the Campus Ministry office.",
+      services: [
+        { label: "Daily Mass", val: "Mon–Fri 7:00 AM & 12:00 NN" },
+        { label: "Confession", val: "Tues & Thurs 11:00 AM – 12:00 NN" },
+        { label: "Quiet Hours", val: "Open for reflection daily" },
+        { label: "Campus Ministry", val: "Counseling & retreats" },
+        { label: "Event Blessings", val: "Scheduled with chaplain" },
+      ],
+      hours: { Mon: "6:30 AM – 6:00 PM", Tue: "6:30 AM – 6:00 PM", Wed: "6:30 AM – 6:00 PM",
+               Thu: "6:30 AM – 6:00 PM", Fri: "6:30 AM – 6:00 PM", Sat: "7:00 AM – 5:00 PM", Sun: "6:00 AM – 12:00 PM" },
+      contact: [
+        { label: "Campus Ministry", val: "(02) 8123-4595" },
+        { label: "Email", val: "ministry@lakeview.edu.ph" },
+      ],
+    },
+    health: {
+      name: "Health & Wellness Center",
+      emoji: "🏥",
+      type: "Health Services",
+      typeColor: "#D63939",
+      typeBg: "#FFE3E3",
+      sub: "Medical, dental & counseling",
+      floors: "1",
+      capacity: "80",
+      year: "1999",
+      about: "The Lakeview Health & Wellness Center provides comprehensive health services to students and staff. Staffed by registered nurses, a resident physician, and a licensed counselor, the center handles medical consultations, emergency first aid, mental health support, and dental care.",
+      services: [
+        { label: "Medical Clinic", val: "Physician, daily consultations" },
+        { label: "Dental Clinic", val: "Mon, Wed, Fri only" },
+        { label: "Counseling Room", val: "Confidential mental health support" },
+        { label: "Infirmary", val: "4 beds, rest & recovery" },
+        { label: "First Aid", val: "Emergency response, medications" },
+      ],
+      hours: { Mon: "7:00 AM – 5:00 PM", Tue: "7:00 AM – 5:00 PM", Wed: "7:00 AM – 5:00 PM",
+               Thu: "7:00 AM – 5:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "8:00 AM – 12:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Clinic", val: "(02) 8123-4590" },
+        { label: "Emergency", val: "(02) 8123-4911" },
+        { label: "Email", val: "health@lakeview.edu.ph" },
+      ],
+    },
+    student: {
+      name: "Student Center",
+      emoji: "🎓",
+      type: "Student Services",
+      typeColor: "#F06595",
+      typeBg: "#FFD6E7",
+      sub: "Org room, events & student life",
+      floors: "2",
+      capacity: "300",
+      year: "2008",
+      about: "The Student Center is the social and organizational hub for all student activities. It houses student government offices, organization rooms, a cooperative store, ATM machines, and a student lounge. The rooftop is used for small-scale events and gatherings.",
+      services: [
+        { label: "Student Government", val: "LASSO office, 2nd Floor" },
+        { label: "Organization Rooms", val: "12 rooms for accredited orgs" },
+        { label: "Cooperative Store", val: "Books, supplies, merch" },
+        { label: "Student Lounge", val: "TV, gaming area, bean bags" },
+        { label: "Bulletin Boards", val: "Events, scholarships, OJT postings" },
+      ],
+      hours: { Mon: "7:00 AM – 7:00 PM", Tue: "7:00 AM – 7:00 PM", Wed: "7:00 AM – 7:00 PM",
+               Thu: "7:00 AM – 7:00 PM", Fri: "7:00 AM – 6:00 PM", Sat: "9:00 AM – 3:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "Student Affairs", val: "(02) 8123-4582" },
+        { label: "Email", val: "studentlife@lakeview.edu.ph" },
+      ],
+    },
+    engineering: {
+      name: "Engineering & Computer Lab",
+      emoji: "💻",
+      type: "Science & Technology",
+      typeColor: "#495057",
+      typeBg: "#E9ECEF",
+      sub: "Robotics, coding & hardware labs",
+      floors: "2",
+      capacity: "200",
+      year: "2015",
+      about: "The Engineering & Computer Lab building is Lakeview's newest technical facility. It supports the school's STEM programs with a dedicated Robotics lab, two computer programming rooms, electronics workbench areas, and a maker space equipped with 3D printers and laser cutters.",
+      services: [
+        { label: "Robotics Lab", val: "LEGO Mindstorms, Arduino kits" },
+        { label: "Programming Rooms", val: "80 workstations, 2 rooms" },
+        { label: "Electronics Bench", val: "Soldering, PCB, prototyping" },
+        { label: "Maker Space", val: "3D printers, laser cutter, CNC" },
+        { label: "Server Room", val: "Campus network infrastructure" },
+      ],
+      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 6:00 PM",
+               Thu: "7:00 AM – 6:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "9:00 AM – 1:00 PM", Sun: "Closed" },
+      contact: [
+        { label: "ICT Department", val: "(02) 8123-4576" },
+        { label: "Email", val: "ict@lakeview.edu.ph" },
+      ],
+    },
+    auditorium: {
+      name: "Lakeview Auditorium",
+      emoji: "🎭",
+      type: "Events & Culture",
+      typeColor: "#5C7CFA",
+      typeBg: "#E8EDFF",
+      sub: "Performances, convocations & film",
+      floors: "2",
+      capacity: "800",
+      year: "2005",
+      about: "The Lakeview Auditorium is the premier event venue on campus, seating up to 800 guests. It hosts graduation ceremonies, performing arts productions, school-wide assemblies, and guest speaker events. The stage is equipped with professional sound, lighting, and AV systems.",
+      services: [
+        { label: "Main Stage", val: "800-seat tiered hall" },
+        { label: "AV System", val: "4K projection, surround sound" },
+        { label: "Green Rooms", val: "2 backstage dressing rooms" },
+        { label: "Balcony Seating", val: "200 additional seats" },
+        { label: "Venue Rental", val: "Available for school events" },
+      ],
+      hours: { Mon: "8:00 AM – 9:00 PM", Tue: "8:00 AM – 9:00 PM", Wed: "8:00 AM – 9:00 PM",
+               Thu: "8:00 AM – 9:00 PM", Fri: "8:00 AM – 10:00 PM", Sat: "8:00 AM – 10:00 PM", Sun: "By booking" },
+      contact: [
+        { label: "Events Office", val: "(02) 8123-4560" },
+        { label: "Email", val: "events@lakeview.edu.ph" },
+        { label: "Bookings", val: "events.lakeview.edu.ph" },
+      ],
+    },
+    faculty: {
+      name: "Faculty Offices",
+      emoji: "👨‍🏫",
+      type: "Academic",
+      typeColor: "#20C997",
+      typeBg: "#C3FAE8",
+      sub: "Department offices & faculty rooms",
+      floors: "2",
+      capacity: "150",
+      year: "2003",
+      about: "The Faculty Offices building houses department chairs and faculty members for consultation, office hours, and academic advising. Each department has a dedicated wing, and faculty are available during posted office hours for student meetings.",
+      services: [
+        { label: "Department Offices", val: "All departments represented" },
+        { label: "Office Hours", val: "See department schedules" },
+        { label: "Advising", val: "Academic & career guidance" },
+        { label: "Faculty Lounge", val: "Staff only area" },
+        { label: "Meeting Rooms", val: "2 small conference rooms" },
+      ],
+      hours: { Mon: "7:00 AM – 5:30 PM", Tue: "7:00 AM – 5:30 PM", Wed: "7:00 AM – 5:30 PM",
+               Thu: "7:00 AM – 5:30 PM", Fri: "7:00 AM – 4:30 PM", Sat: "By appointment", Sun: "Closed" },
+      contact: [
+        { label: "Faculty Desk", val: "(02) 8123-4562" },
+        { label: "Email", val: "faculty@lakeview.edu.ph" },
+      ],
+    },
+  };
+
+  let currentId = null;
+
+  // ── PAN & ZOOM ──
+  const wrap = document.getElementById('map-wrap');
+  const stage = document.getElementById('map-stage');
+  let scale = 1, tx = 0, ty = 0;
+  let dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
+
+  function applyTransform() {
+    stage.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+    document.getElementById('zoom-label').textContent = Math.round(scale * 100) + '%';
+  }
+
+  window.changeZoom = function(delta) {
+    const rect = wrap.getBoundingClientRect();
+    const cx = rect.width / 2, cy = rect.height / 2;
+    const newScale = Math.min(3, Math.max(0.4, scale + delta));
+    tx = cx - (cx - tx) * (newScale / scale);
+    ty = cy - (cy - ty) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  };
+
+  window.resetView = function() {
+    scale = 1; tx = 0; ty = 0;
+    applyTransform();
+  };
+
+  wrap.addEventListener('wheel', e => {
+    e.preventDefault();
+    const rect = wrap.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const delta = e.deltaY < 0 ? 0.12 : -0.12;
+    const newScale = Math.min(3, Math.max(0.4, scale + delta));
+    tx = mx - (mx - tx) * (newScale / scale);
+    ty = my - (my - ty) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+  }, { passive: false });
+
+  wrap.addEventListener('mousedown', e => {
+    if (e.target.closest('.bld') || e.target.closest('#popup')) return;
+    dragging = true;
+    wrap.classList.add('dragging');
+    startX = e.clientX; startY = e.clientY;
+    startTx = tx; startTy = ty;
+  });
+  
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    tx = startTx + (e.clientX - startX);
+    ty = startTy + (e.clientY - startY);
+    applyTransform();
+  });
+  
+  document.addEventListener('mouseup', () => { 
+    dragging = false; 
+    wrap.classList.remove('dragging'); 
+  });
+
+  // Touch support
+  let lastTouchDist = null;
+  wrap.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      dragging = true;
+      startX = e.touches[0].clientX; startY = e.touches[0].clientY;
+      startTx = tx; startTy = ty;
+    }
+    if (e.touches.length === 2) {
+      lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                                  e.touches[0].clientY - e.touches[1].clientY);
+    }
+  }, { passive: true });
+  
+  wrap.addEventListener('touchmove', e => {
+    if (e.touches.length === 1 && dragging) {
+      tx = startTx + (e.touches[0].clientX - startX);
+      ty = startTy + (e.touches[0].clientY - startY);
+      applyTransform();
+    }
+    if (e.touches.length === 2 && lastTouchDist) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                               e.touches[0].clientY - e.touches[1].clientY);
+      const delta = (dist - lastTouchDist) * 0.005;
+      const rect = wrap.getBoundingClientRect();
+      const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
+      const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
+      const newScale = Math.min(3, Math.max(0.4, scale + delta));
+      tx = mx - (mx - tx) * (newScale / scale);
+      ty = my - (my - ty) * (newScale / scale);
+      scale = newScale;
+      lastTouchDist = dist;
+      applyTransform();
+    }
+    e.preventDefault();
+  }, { passive: false });
+  
+  wrap.addEventListener('touchend', () => { 
+    dragging = false; 
+    lastTouchDist = null; 
+  });
+
+  // ── POPUP ──
+  window.showPopup = function(event, id) {
+    event.stopPropagation();
+    currentId = id;
+    const b = BUILDINGS[id];
+    const popup = document.getElementById('popup');
+
+    document.getElementById('p-icon').textContent = b.emoji;
+    document.getElementById('p-icon').style.background = b.typeBg;
+    document.getElementById('p-title').textContent = b.name;
+    document.getElementById('p-type').textContent = b.type;
+    document.getElementById('p-type').style.color = b.typeColor;
+    document.getElementById('p-btn').style.background = b.typeColor;
+
+    document.getElementById('p-meta').innerHTML = `
+      <div class="popup-row">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${b.typeColor}" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg>
+        <span>${b.floors} floors · Est. ${b.year}</span>
+      </div>
+      <div class="popup-row">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${b.typeColor}" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+        <span>${Object.values(b.hours)[0]}</span>
+      </div>
+    `;
+    document.getElementById('p-desc').textContent = b.about.substring(0, 120) + '…';
+
+    // Position near building on screen
+    const mapRect = wrap.getBoundingClientRect();
+    const bldEl = document.querySelector(`[data-id="${id}"]`);
+    const bldRect = bldEl.getBoundingClientRect();
+
+    let px = bldRect.left + bldRect.width / 2 - mapRect.left - 140;
+    let py = bldRect.top - mapRect.top - 10;
+
+    if (py < 10) py = bldRect.bottom - mapRect.top + 10;
+    if (px < 10) px = 10;
+    if (px + 280 > mapRect.width - 10) px = mapRect.width - 290;
+
+    popup.style.left = px + 'px';
+    popup.style.top = py + 'px';
+    popup.classList.add('visible');
+    popup.style.animation = 'none';
+    popup.offsetHeight;
+    popup.style.animation = '';
+  };
+
+  window.closePopup = function() {
+    document.getElementById('popup').classList.remove('visible');
+  };
+
+  wrap.addEventListener('click', e => {
+    if (!e.target.closest('#popup') && !e.target.closest('.bld')) window.closePopup();
+  });
+
+  // ── DETAIL PAGE ──
+  window.openDetail = function() {
+    if (!currentId || !BUILDINGS[currentId]) return;
+    
+    const b = BUILDINGS[currentId];
+    const page = document.getElementById('detail-page');
+
+    document.getElementById('d-hero').style.background =
+      `linear-gradient(135deg, ${b.typeColor}, ${b.typeColor}CC)`;
+    document.getElementById('d-hero-emoji').textContent = b.emoji;
+    document.getElementById('d-badge').textContent = b.type;
+    document.getElementById('d-name').textContent = b.name;
+    document.getElementById('d-sub').textContent = b.sub;
+    document.getElementById('d-about').textContent = b.about;
+
+    document.getElementById('d-stats').innerHTML = `
+      <div class="detail-stat">
+        <label>Floors</label>
+        <p>${b.floors}</p>
+      </div>
+      <div class="detail-stat">
+        <label>Capacity</label>
+        <p>${b.capacity}</p>
+      </div>
+      <div class="detail-stat">
+        <label>Year Built</label>
+        <p>${b.year}</p>
+      </div>
+    `;
+
+    document.getElementById('d-services').innerHTML = b.services.map(s => `
+      <li>
+        <strong>${s.label}</strong>
+        <span>${s.val}</span>
+      </li>
+    `).join('');
+
+    const days = Object.keys(b.hours);
+    document.getElementById('d-hours').innerHTML = days.map(d => `
+      <div class="hour-row">
+        <span class="day">${d}</span>
+        <span class="time">${b.hours[d]}</span>
+      </div>
+    `).join('');
+
+    document.getElementById('d-contact').innerHTML = b.contact.map(c => `
+      <li>
+        <strong>${c.label}</strong>
+        <span>${c.val}</span>
+      </li>
+    `).join('');
+
+    window.closePopup();
+    page.classList.add('open');
+  };
+
+  window.closeDetail = function() {
+    document.getElementById('detail-page').classList.remove('open');
+  };
+
+  // Initialize
+  window.changeZoom(0);
+})();
+</script>
+
+<!-- Netlify configuration -->
+<meta name="format-detection" content="telephone=no">
+<meta name="format-detection" content="date=no">
+<meta name="format-detection" content="address=no">
+<meta name="format-detection" content="email=no">
+</body>
+</html>
