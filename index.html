@@ -3,20 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Campus Interactive Map | Lakeview Academy</title>
+<title>Campus Interactive Map | PUP Maragondon</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --sky: #EEF4FF;
-    --path: #DDE3EE;
-    --grass: #D8EDDA;
-    --grass-deep: #B8D9BB;
-    --court: #C8D8F0;
-    --parking: #E8E4DC;
-    --water: #C2D9F0;
     --academic: #3B5BDB;
     --academic-light: #DBE4FF;
     --science: #0B7285;
@@ -30,7 +23,6 @@
     --health: #C92A2A;
     --health-light: #FFE3E3;
     --shadow: rgba(30,40,80,0.12);
-    --shadow-strong: rgba(30,40,80,0.22);
     --text-dark: #1A1F36;
     --text-mid: #4A5068;
     --text-light: #7A829A;
@@ -43,7 +35,6 @@
     font-family: 'DM Sans', system-ui, sans-serif;
   }
 
-  /* ── HEADER ── */
   #header {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     background: rgba(20,24,46,0.94);
@@ -62,9 +53,7 @@
     background: rgba(59,91,219,0.25); color: #98B4FF;
     border: 1px solid rgba(59,91,219,0.35); border-radius: 20px;
   }
-  .zoom-controls {
-    display: flex; align-items: center; gap: 4px;
-  }
+  .zoom-controls { display: flex; align-items: center; gap: 4px; }
   .zoom-btn {
     width: 32px; height: 32px; border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.06); color: #fff; font-size: 18px;
@@ -77,7 +66,6 @@
     font-family: 'DM Mono', monospace;
   }
 
-  /* ── MAP CANVAS ── */
   #map-wrap {
     position: fixed; inset: 56px 0 0 0;
     overflow: hidden; cursor: grab;
@@ -90,17 +78,26 @@
     will-change: transform;
   }
 
-  /* ── BUILDING GROUPS ── */
-  .bld {
-    cursor: pointer;
-    transition: filter 0.15s;
+  .bld { cursor: pointer; }
+  .bld-face {
+    transition: opacity 0.15s;
+    opacity: 0.30;
   }
-  .bld:hover .bld-face { filter: brightness(1.08); }
-  .bld:hover .bld-shadow { opacity: 0.5; }
-  .bld-shadow { opacity: 0.25; transition: opacity 0.15s; }
-  .bld-face { transition: filter 0.15s; }
+  .bld:hover .bld-face { opacity: 0.55; }
+  .bld-label {
+    pointer-events: none;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 7px;
+    fill: white;
+    text-anchor: middle;
+    dominant-baseline: central;
+    paint-order: stroke;
+    stroke: rgba(0,0,0,0.7);
+    stroke-width: 2.5px;
+    stroke-linejoin: round;
+  }
 
-  /* ── TOOLTIP POPUP ── */
   #popup {
     position: absolute; z-index: 200;
     background: #fff;
@@ -131,10 +128,7 @@
   .popup-title { font-size: 14px; font-weight: 600; color: var(--text-dark); line-height: 1.3; }
   .popup-type  { font-size: 11px; font-weight: 500; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
   .popup-body  { padding: 12px 16px; }
-  .popup-meta  { display: flex; flex-direction: column; gap: 6px; }
-  .popup-row   { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-mid); }
-  .popup-row svg { flex-shrink: 0; opacity: 0.6; }
-  .popup-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.5; margin-top: 8px; }
+  .popup-desc  { font-size: 12px; color: var(--text-mid); line-height: 1.5; margin-top: 4px; font-style: italic; }
   .popup-footer {
     padding: 10px 16px 14px;
     display: flex; gap: 8px;
@@ -155,14 +149,7 @@
   }
   .btn-detail:hover { filter: brightness(1.1); }
   .btn-detail:active { transform: scale(0.97); }
-  .popup-arrow {
-    position: absolute; bottom: -9px; left: 50%;
-    transform: translateX(-50%);
-    width: 18px; height: 10px;
-    overflow: visible;
-  }
 
-  /* ── DETAIL PAGE ── */
   #detail-page {
     position: fixed; inset: 0; z-index: 500;
     background: #F8F9FC;
@@ -173,7 +160,7 @@
   #detail-page.open { transform: translateY(0); }
 
   .detail-hero {
-    position: relative; height: 220px;
+    position: relative; height: 200px;
     display: flex; align-items: flex-end;
     padding: 24px 32px;
     overflow: hidden;
@@ -181,7 +168,7 @@
   .detail-hero-bg {
     position: absolute; inset: 0;
     opacity: 0.12;
-    font-size: 260px;
+    font-size: 240px;
     display: flex; align-items: center; justify-content: center;
     line-height: 1; user-select: none;
   }
@@ -207,36 +194,13 @@
   .detail-hero p  { font-size: 14px; opacity: 0.82; margin-top: 4px; }
 
   .detail-body { max-width: 860px; margin: 0 auto; padding: 28px 32px 60px; }
-  .detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 28px; }
-  .detail-stat {
-    background: #fff; border: 1px solid #E8EBF4; border-radius: 14px; padding: 16px;
+  .detail-empty {
+    background: #fff; border: 1px dashed #D0D5E8; border-radius: 14px;
+    padding: 32px; text-align: center; color: var(--text-light);
+    font-size: 14px; margin-bottom: 20px;
   }
-  .detail-stat label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-light); }
-  .detail-stat p { font-size: 18px; font-weight: 600; color: var(--text-dark); margin-top: 4px; }
+  .detail-empty strong { display: block; font-size: 16px; color: var(--text-mid); margin-bottom: 6px; }
 
-  .detail-section { margin-bottom: 28px; }
-  .detail-section h3 { font-size: 15px; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;
-    padding-bottom: 8px; border-bottom: 1px solid #E8EBF4; }
-  .detail-section p { font-size: 14px; color: var(--text-mid); line-height: 1.65; }
-
-  .detail-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
-  .detail-list li {
-    background: #fff; border: 1px solid #E8EBF4; border-radius: 10px;
-    padding: 12px 14px; font-size: 13px; color: var(--text-mid);
-    display: flex; align-items: center; gap: 10px;
-  }
-  .detail-list li strong { color: var(--text-dark); font-weight: 500; min-width: 120px; }
-
-  .detail-hours { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .hour-row {
-    background: #fff; border: 1px solid #E8EBF4; border-radius: 10px;
-    padding: 10px 14px; display: flex; justify-content: space-between; align-items: center;
-    font-size: 13px;
-  }
-  .hour-row .day { color: var(--text-mid); }
-  .hour-row .time { font-weight: 500; color: var(--text-dark); font-family: 'DM Mono', monospace; font-size: 12px; }
-
-  /* ── LEGEND ── */
   #legend {
     position: fixed; bottom: 20px; left: 20px; z-index: 100;
     background: rgba(20,24,46,0.88); backdrop-filter: blur(12px);
@@ -248,17 +212,12 @@
   .legend-item  { display: flex; align-items: center; gap: 8px; font-size: 11px; color: rgba(255,255,255,0.7); }
   .legend-dot   { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
 
-  /* ── COMPASS ── */
   #compass {
     position: fixed; bottom: 20px; right: 20px; z-index: 100;
     width: 52px; height: 52px;
   }
 
-  /* ── MINI LABEL ── */
-  .map-label { font-family: 'DM Sans', sans-serif; pointer-events: none; }
-
   @media (max-width: 600px) {
-    .detail-grid { grid-template-columns: 1fr 1fr; }
     .detail-body { padding: 20px 16px 60px; }
     .detail-hero { padding: 20px 16px; }
     #legend { display: none; }
@@ -269,14 +228,14 @@
 
 <!-- HEADER -->
 <div id="header">
-  <h1>🎓 Lakeview Academy <span>/ Campus Map</span></h1>
+  <h1>🎓 PUP Maragondon <span>/ Campus Map</span></h1>
   <div style="display:flex;align-items:center;gap:12px">
     <span class="header-badge">Interactive</span>
     <div class="zoom-controls">
-      <button class="zoom-btn" onclick="window.changeZoom(-0.2)">−</button>
+      <button class="zoom-btn" onclick="window.changeZoom(-0.2)">&#8722;</button>
       <span id="zoom-label">100%</span>
       <button class="zoom-btn" onclick="window.changeZoom(0.2)">+</button>
-      <button class="zoom-btn" onclick="window.resetView()" style="font-size:13px;">⌂</button>
+      <button class="zoom-btn" onclick="window.resetView()" style="font-size:13px;">&#8962;</button>
     </div>
   </div>
 </div>
@@ -284,341 +243,102 @@
 <!-- MAP -->
 <div id="map-wrap">
   <div id="map-stage">
-    <svg id="campus-svg" width="1400" height="1000" viewBox="0 0 1400 1000"
+    <svg id="campus-svg" width="299" height="427" viewBox="0 0 299 427"
          xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <filter id="bld-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="3" dy="4" stdDeviation="5" flood-color="#1A2050" flood-opacity="0.25"/>
-        </filter>
-        <pattern id="grass-pat" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-          <rect width="20" height="20" fill="#C8DFCA"/>
-          <line x1="0" y1="10" x2="20" y2="10" stroke="#B8D0BA" stroke-width="0.5" opacity="0.5"/>
-          <line x1="10" y1="0" x2="10" y2="20" stroke="#B8D0BA" stroke-width="0.5" opacity="0.5"/>
-        </pattern>
-        <pattern id="path-pat" x="0" y="0" width="12" height="12" patternUnits="userSpaceOnUse">
-          <rect width="12" height="12" fill="#D8DDE8"/>
-          <line x1="0" y1="6" x2="12" y2="6" stroke="#CCD1DC" stroke-width="0.4" opacity="0.6"/>
-        </pattern>
-      </defs>
 
-      <!-- GROUND -->
-      <rect x="0" y="0" width="1400" height="1000" fill="#C4CCDA"/>
+      <!-- CAMPUS MAP IMAGE -->
+      <image href="data:image/jpeg;base64,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"
+             x="0" y="0" width="299" height="427"
+             preserveAspectRatio="xMidYMid meet"/>
 
-      <!-- OUTER CAMPUS BOUNDARY -->
-      <rect x="30" y="30" width="1340" height="940" rx="20"
-            fill="#D4DBE6" stroke="#B0BAC8" stroke-width="1.5"/>
+      <!-- ═══ BUILDING OVERLAYS ═══ -->
+      <!-- Each .bld group has a semi-transparent colored rect + label -->
+      <!-- Coordinates estimated from the 299x427 campus map image -->
 
-      <!-- GRASS AREAS -->
-      <rect x="60" y="60" width="1280" height="880" rx="14" fill="url(#grass-pat)"/>
-
-      <!-- MAIN ROADS (horizontal + vertical) -->
-      <rect x="60" y="460" width="1280" height="56" fill="url(#path-pat)" rx="4"/>
-      <rect x="620" y="60"  width="56"  height="880" fill="url(#path-pat)" rx="4"/>
-      <!-- secondary paths -->
-      <rect x="60"  y="240" width="620" height="32" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="676" y="240" width="664" height="32" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="60"  y="680" width="560" height="28" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="676" y="680" width="664" height="28" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="300" y="60"  width="32"  height="400" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="300" y="516" width="32"  height="424" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="920" y="60"  width="32"  height="400" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-      <rect x="920" y="516" width="32"  height="424" fill="url(#path-pat)" rx="3" opacity="0.7"/>
-
-      <!-- SPORTS FIELD (large green) -->
-      <rect x="80" y="720" width="480" height="200" rx="10" fill="#A8D5A2" stroke="#7EBA78" stroke-width="1.2"/>
-      <ellipse cx="320" cy="820" rx="180" ry="80" fill="none" stroke="#7EBA78" stroke-width="1" opacity="0.6"/>
-      <line x1="320" y1="720" x2="320" y2="920" stroke="#7EBA78" stroke-width="1" opacity="0.5"/>
-      <text x="320" y="820" text-anchor="middle" dominant-baseline="central"
-            font-family="DM Sans,sans-serif" font-size="13" fill="#4A8A44" font-weight="500" opacity="0.8">⚽ Sports Field</text>
-
-      <!-- BASKETBALL COURTS -->
-      <rect x="680" y="720" width="200" height="100" rx="6" fill="#B0C8E8" stroke="#7EA8CC" stroke-width="1.2"/>
-      <line x1="780" y1="720" x2="780" y2="820" stroke="#7EA8CC" stroke-width="0.8" opacity="0.7"/>
-      <circle cx="730" cy="770" r="18" fill="none" stroke="#7EA8CC" stroke-width="0.8" opacity="0.6"/>
-      <circle cx="830" cy="770" r="18" fill="none" stroke="#7EA8CC" stroke-width="0.8" opacity="0.6"/>
-      <text x="780" y="838" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" fill="#4A6A8A" opacity="0.8">🏀 Courts</text>
-
-      <!-- SWIMMING POOL -->
-      <rect x="900" y="720" width="160" height="100" rx="16" fill="#8EC8F0" stroke="#5AAEDC" stroke-width="1.2"/>
-      <rect x="914" y="734" width="132" height="72" rx="12" fill="none" stroke="#5AAEDC" stroke-width="0.7" opacity="0.5" stroke-dasharray="4 3"/>
-      <text x="980" y="775" text-anchor="middle" dominant-baseline="central"
-            font-family="DM Sans,sans-serif" font-size="11" fill="#1A6A9A">🏊 Pool</text>
-
-      <!-- PARKING LOTS -->
-      <rect x="1100" y="720" width="220" height="200" rx="6" fill="#E0DBD0" stroke="#C0BAB0" stroke-width="1"/>
-      <line x1="1110" y1="740" x2="1110" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
-      <line x1="1140" y1="740" x2="1140" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
-      <line x1="1170" y1="740" x2="1170" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
-      <line x1="1200" y1="740" x2="1200" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
-      <line x1="1230" y1="740" x2="1230" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
-      <line x1="1260" y1="740" x2="1260" y2="900" stroke="#C0BAB0" stroke-width="0.7" stroke-dasharray="6 4" opacity="0.6"/>
-      <text x="1210" y="916" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="12" fill="#7A7060" opacity="0.9">🅿 Parking</text>
-
-      <!-- GARDEN / COURTYARD -->
-      <rect x="680" y="840" width="380" height="100" rx="10" fill="#B8E0B0" stroke="#88C080" stroke-width="1"/>
-      <circle cx="760" cy="890" r="22" fill="#90C888" stroke="#68A860" stroke-width="1"/>
-      <circle cx="870" cy="888" r="18" fill="#90C888" stroke="#68A860" stroke-width="1"/>
-      <circle cx="970" cy="890" r="20" fill="#90C888" stroke="#68A860" stroke-width="1"/>
-      <text x="870" y="930" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="11" fill="#3A6834" opacity="0.9">🌿 Garden & Amphitheater</text>
-
-      <!-- ═══ BUILDINGS ═══ -->
-
-      <!-- 1. ADMINISTRATION BUILDING -->
-      <g class="bld" data-id="admin" onclick="window.showPopup(event,'admin')">
-        <rect class="bld-shadow" x="458" y="74" width="200" height="140" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="450" y="68" width="200" height="140" rx="10"
-              fill="#3B5BDB" stroke="#2748C8" stroke-width="1.5"/>
-        <rect x="450" y="68" width="200" height="32" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="450" y="88" width="200" height="12" fill="rgba(255,255,255,0.07)"/>
-        <!-- windows -->
-        <rect x="466" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="498" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="530" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="562" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="594" y="84" width="22" height="16" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="466" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="498" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="530" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="562" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="594" y="112" width="22" height="16" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <!-- door -->
-        <rect x="530" y="162" width="40" height="46" rx="4" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <!-- label -->
-        <text x="550" y="150" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🏛 Admin</text>
+      <!-- PARKING AREA (upper right, tan/beige) -->
+      <g class="bld" data-id="parking" onclick="window.showPopup(event,'parking')">
+        <rect class="bld-face" x="215" y="18" width="68" height="62" rx="2"
+              fill="#6B7280" stroke="#374151" stroke-width="1.2"/>
+        <text class="bld-label" x="249" y="49">Parking Area</text>
       </g>
 
-      <!-- 2. LIBRARY -->
-      <g class="bld" data-id="library" onclick="window.showPopup(event,'library')">
-        <rect class="bld-shadow" x="768" y="74" width="170" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="760" y="68" width="170" height="130" rx="10"
-              fill="#0B7285" stroke="#087A96" stroke-width="1.5"/>
-        <rect x="760" y="68" width="170" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="776" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="806" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="836" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="866" y="80" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="776" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="806" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="836" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="866" y="104" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="824" y="152" width="34" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="845" y="142" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">📚 Library</text>
+      <!-- BUILDING A (large green rect, upper center-right) -->
+      <g class="bld" data-id="buildingA" onclick="window.showPopup(event,'buildingA')">
+        <rect class="bld-face" x="132" y="60" width="75" height="56" rx="2"
+              fill="#3B5BDB" stroke="#1A44CC" stroke-width="1.2"/>
+        <text class="bld-label" x="169" y="88">Building A</text>
       </g>
 
-      <!-- 3. SCIENCE & TECH BUILDING -->
-      <g class="bld" data-id="science" onclick="window.showPopup(event,'science')">
-        <rect class="bld-shadow" x="968" y="74" width="160" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="960" y="68" width="160" height="130" rx="10"
-              fill="#2F9E44" stroke="#278A3A" stroke-width="1.5"/>
-        <rect x="960" y="68" width="160" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="976" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1004" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1032" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1060" y="80" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="976" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1004" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1032" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1060" y="104" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1024" y="152" width="32" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="1040" y="142" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🔬 Science</text>
+      <!-- BUILDING B (small pink, left-center) -->
+      <g class="bld" data-id="buildingB" onclick="window.showPopup(event,'buildingB')">
+        <rect class="bld-face" x="59" y="109" width="52" height="28" rx="2"
+              fill="#E67700" stroke="#CC6800" stroke-width="1.2"/>
+        <text class="bld-label" x="85" y="123">Building B</text>
       </g>
 
-      <!-- 4. GYMNASIUM -->
-      <g class="bld" data-id="gym" onclick="window.showPopup(event,'gym')">
-        <rect class="bld-shadow" x="88" y="74" width="180" height="140" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="80" y="68" width="180" height="140" rx="10"
-              fill="#1971C2" stroke="#1565A8" stroke-width="1.5"/>
-        <rect x="80" y="68" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="96" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="128" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="160" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="192" y="80" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="96" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="128" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="160" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="192" y="104" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="150" y="162" width="40" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="170" y="150" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🏋 Gymnasium</text>
-      </g>
-
-      <!-- 5. ARTS BUILDING -->
-      <g class="bld" data-id="arts" onclick="window.showPopup(event,'arts')">
-        <rect class="bld-shadow" x="88" y="280" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="80" y="274" width="180" height="130" rx="10"
-              fill="#862E9C" stroke="#731888" stroke-width="1.5"/>
-        <rect x="80" y="274" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="96" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="128" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="160" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="192" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="96" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="128" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="160" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="150" y="358" width="40" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="170" y="348" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🎨 Arts</text>
-      </g>
-
-      <!-- 6. CAFETERIA -->
-      <g class="bld" data-id="cafeteria" onclick="window.showPopup(event,'cafeteria')">
-        <rect class="bld-shadow" x="408" y="280" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="400" y="274" width="180" height="130" rx="10"
-              fill="#E67700" stroke="#CC6800" stroke-width="1.5"/>
-        <rect x="400" y="274" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="416" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="448" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="480" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="512" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="544" y="286" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="416" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="448" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="480" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="512" y="310" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="460" y="358" width="60" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="490" y="348" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">🍽 Cafeteria</text>
-      </g>
-
-      <!-- 7. CHAPEL -->
-      <g class="bld" data-id="chapel" onclick="window.showPopup(event,'chapel')">
-        <rect class="bld-shadow" x="768" y="280" width="140" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="760" y="274" width="140" height="130" rx="10"
-              fill="#C92A2A" stroke="#B02020" stroke-width="1.5"/>
-        <rect x="760" y="274" width="140" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <!-- cross on roof -->
-        <rect x="823" y="258" width="14" height="32" rx="2" fill="#A01818"/>
-        <rect x="815" y="265" width="30" height="10" rx="2" fill="#A01818"/>
-        <rect x="776" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="804" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="832" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="860" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="798" y="358" width="44" height="46" rx="4" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="830" y="348" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="12" fill="white" font-weight="600">⛪ Chapel</text>
-      </g>
-
-      <!-- 8. HEALTH CENTER -->
-      <g class="bld" data-id="health" onclick="window.showPopup(event,'health')">
-        <rect class="bld-shadow" x="968" y="280" width="160" height="120" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="960" y="274" width="160" height="120" rx="10"
-              fill="#D63939" stroke="#C02A2A" stroke-width="1.5"/>
-        <rect x="960" y="274" width="160" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <!-- red cross -->
-        <rect x="1027" y="260" width="26" height="26" rx="3" fill="#fff" opacity="0.9"/>
-        <rect x="1032" y="263" width="16" height="20" rx="1" fill="#D63939"/>
-        <rect x="1029" y="266" width="22" height="14" rx="1" fill="#D63939"/>
-        <rect x="976" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1004" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1032" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1060" y="286" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1024" y="348" width="32" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="1040" y="340" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🏥 Health Center</text>
-      </g>
-
-      <!-- 9. STUDENT CENTER -->
-      <g class="bld" data-id="student" onclick="window.showPopup(event,'student')">
-        <rect class="bld-shadow" x="408" y="516" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="400" y="510" width="180" height="130" rx="10"
-              fill="#F06595" stroke="#DC4A80" stroke-width="1.5"/>
-        <rect x="400" y="510" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="416" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="448" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="480" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="512" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="544" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="416" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="448" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="480" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="460" y="594" width="60" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="490" y="582" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🎓 Student Center</text>
-      </g>
-
-      <!-- 10. ENGINEERING / COMPUTER LAB -->
+      <!-- ENGINEERING BUILDING (pink, left-center) -->
       <g class="bld" data-id="engineering" onclick="window.showPopup(event,'engineering')">
-        <rect class="bld-shadow" x="88" y="516" width="180" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="80" y="510" width="180" height="130" rx="10"
-              fill="#495057" stroke="#383D42" stroke-width="1.5"/>
-        <rect x="80" y="510" width="180" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="96" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="128" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="160" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="192" y="522" width="22" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="96" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="128" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="160" y="546" width="22" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="150" y="594" width="40" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="170" y="584" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">💻 Eng. Lab</text>
+        <rect class="bld-face" x="63" y="143" width="68" height="33" rx="2"
+              fill="#0B7285" stroke="#087A96" stroke-width="1.2"/>
+        <text class="bld-label" x="97" y="159">Engineering</text>
       </g>
 
-      <!-- 11. AUDITORIUM -->
-      <g class="bld" data-id="auditorium" onclick="window.showPopup(event,'auditorium')">
-        <rect class="bld-shadow" x="688" y="516" width="200" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="680" y="510" width="200" height="130" rx="10"
-              fill="#5C7CFA" stroke="#4B6AE8" stroke-width="1.5"/>
-        <rect x="680" y="510" width="200" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="696" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="726" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="756" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="786" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="816" y="522" width="20" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="696" y="546" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="726" y="546" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="756" y="546" width="20" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="760" y="594" width="60" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="780" y="584" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">🎭 Auditorium</text>
+      <!-- AUDIO VISUAL ROOM (small, attached near engineering) -->
+      <g class="bld" data-id="audiovisual" onclick="window.showPopup(event,'audiovisual')">
+        <rect class="bld-face" x="101" y="143" width="28" height="20" rx="2"
+              fill="#862E9C" stroke="#6A1F7A" stroke-width="1"/>
+        <text class="bld-label" x="115" y="153" font-size="5.5">AVR</text>
       </g>
 
-      <!-- 12. FACULTY OFFICES -->
-      <g class="bld" data-id="faculty" onclick="window.showPopup(event,'faculty')">
-        <rect class="bld-shadow" x="968" y="516" width="160" height="130" rx="10" fill="#1A2050" filter="url(#bld-shadow)"/>
-        <rect class="bld-face" x="960" y="510" width="160" height="130" rx="10"
-              fill="#20C997" stroke="#16A880" stroke-width="1.5"/>
-        <rect x="960" y="510" width="160" height="28" rx="10" fill="rgba(255,255,255,0.1)"/>
-        <rect x="976" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1004" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1032" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="1060" y="522" width="18" height="14" rx="3" fill="rgba(255,255,255,0.18)"/>
-        <rect x="976" y="546" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1004" y="546" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1032" y="546" width="18" height="14" rx="3" fill="rgba(255,255,255,0.15)"/>
-        <rect x="1024" y="594" width="32" height="46" rx="3" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)" stroke-width="0.8"/>
-        <text x="1040" y="584" text-anchor="middle" dominant-baseline="central" class="map-label"
-              font-family="DM Sans,sans-serif" font-size="11" fill="white" font-weight="600">👨‍🏫 Faculty</text>
+      <!-- BUILDING D (left side) -->
+      <g class="bld" data-id="buildingD" onclick="window.showPopup(event,'buildingD')">
+        <rect class="bld-face" x="37" y="168" width="46" height="33" rx="2"
+              fill="#3B5BDB" stroke="#1A44CC" stroke-width="1.2"/>
+        <text class="bld-label" x="60" y="184">Building D</text>
       </g>
 
-      <!-- COMPASS ROSE (decorative, top-right) -->
-      <g transform="translate(1310,100)" opacity="0.6">
-        <circle cx="0" cy="0" r="28" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="0.8"/>
-        <polygon points="0,-24 5,-8 0,-12 -5,-8" fill="rgba(255,255,255,0.8)"/>
-        <polygon points="0,24 5,8 0,12 -5,8" fill="rgba(255,255,255,0.4)"/>
-        <polygon points="24,0 8,5 12,0 8,-5" fill="rgba(255,255,255,0.4)"/>
-        <polygon points="-24,0 -8,5 -12,0 -8,-5" fill="rgba(255,255,255,0.4)"/>
-        <text x="0" y="-32" text-anchor="middle" font-family="DM Sans,sans-serif"
-              font-size="10" fill="rgba(255,255,255,0.7)" font-weight="600">N</text>
-        <text x="0" y="42" text-anchor="middle" font-family="DM Sans,sans-serif"
-              font-size="9" fill="rgba(255,255,255,0.4)">S</text>
-        <text x="32" y="4" text-anchor="start" font-family="DM Sans,sans-serif"
-              font-size="9" fill="rgba(255,255,255,0.4)">E</text>
-        <text x="-32" y="4" text-anchor="end" font-family="DM Sans,sans-serif"
-              font-size="9" fill="rgba(255,255,255,0.4)">W</text>
+      <!-- GYMNASIUM (large center building) -->
+      <g class="bld" data-id="gymnasium" onclick="window.showPopup(event,'gymnasium')">
+        <rect class="bld-face" x="92" y="185" width="126" height="82" rx="2"
+              fill="#2F9E44" stroke="#1F7A2D" stroke-width="1.5"/>
+        <text class="bld-label" x="155" y="226" font-size="9">Gymnasium</text>
       </g>
 
-      <!-- SCALE BAR -->
-      <g transform="translate(80,960)" opacity="0.55">
-        <line x1="0" y1="0" x2="100" y2="0" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
-        <line x1="0" y1="-5" x2="0" y2="5" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
-        <line x1="100" y1="-5" x2="100" y2="5" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
-        <text x="50" y="-8" text-anchor="middle" font-family="DM Sans,sans-serif"
-              font-size="10" fill="rgba(255,255,255,0.7)">100m</text>
+      <!-- GAC BUILDING (right of gymnasium) -->
+      <g class="bld" data-id="gac" onclick="window.showPopup(event,'gac')">
+        <rect class="bld-face" x="178" y="200" width="52" height="42" rx="2"
+              fill="#E67700" stroke="#CC6800" stroke-width="1.2"/>
+        <text class="bld-label" x="204" y="221">GAC Bldg.</text>
       </g>
+
+      <!-- REMULLA BUILDING (far left) -->
+      <g class="bld" data-id="remulla" onclick="window.showPopup(event,'remulla')">
+        <rect class="bld-face" x="13" y="207" width="50" height="42" rx="2"
+              fill="#C92A2A" stroke="#A01818" stroke-width="1.2"/>
+        <text class="bld-label" x="38" y="228">Remulla Bldg.</text>
+      </g>
+
+      <!-- STUDENT STUDY SHED -->
+      <g class="bld" data-id="studyshed" onclick="window.showPopup(event,'studyshed')">
+        <rect class="bld-face" x="33" y="252" width="62" height="28" rx="2"
+              fill="#20C997" stroke="#12A37A" stroke-width="1.2"/>
+        <text class="bld-label" x="64" y="266">Study Shed</text>
+      </g>
+
+      <!-- CANTEEN -->
+      <g class="bld" data-id="canteen" onclick="window.showPopup(event,'canteen')">
+        <rect class="bld-face" x="38" y="285" width="58" height="27" rx="2"
+              fill="#E67700" stroke="#CC6800" stroke-width="1.2"/>
+        <text class="bld-label" x="67" y="298">Canteen</text>
+      </g>
+
+      <!-- ORG HOUSE -->
+      <g class="bld" data-id="orghouse" onclick="window.showPopup(event,'orghouse')">
+        <rect class="bld-face" x="35" y="317" width="50" height="28" rx="2"
+              fill="#862E9C" stroke="#6A1F7A" stroke-width="1.2"/>
+        <text class="bld-label" x="60" y="331">Org House</text>
+      </g>
+
     </svg>
   </div>
 </div>
@@ -629,16 +349,17 @@
     <div class="popup-icon" id="p-icon"></div>
     <div>
       <div class="popup-title" id="p-title"></div>
-      <div class="popup-type" id="p-type"></div>
+      <div class="popup-type"  id="p-type"></div>
     </div>
   </div>
   <div class="popup-body">
-    <div class="popup-meta" id="p-meta"></div>
     <div class="popup-desc" id="p-desc"></div>
   </div>
   <div class="popup-footer">
-    <button class="btn-close" onclick="window.closePopup()">✕ Close</button>
-    <button class="btn-detail" id="p-btn" onclick="window.openDetail()">View Details →</button>
+    <button class="btn-close" onclick="window.closePopup()">Close</button>
+    <button class="btn-detail" id="p-btn" onclick="window.openDetail()">
+      View Details &#8250;
+    </button>
   </div>
 </div>
 
@@ -646,7 +367,7 @@
 <div id="detail-page">
   <div class="detail-hero" id="d-hero">
     <div class="detail-hero-bg" id="d-hero-emoji"></div>
-    <button class="detail-back" onclick="window.closeDetail()">←</button>
+    <button class="detail-back" onclick="window.closeDetail()">&#8592;</button>
     <div class="detail-hero-content">
       <div class="detail-hero-badge" id="d-badge"></div>
       <h2 id="d-name"></h2>
@@ -654,22 +375,9 @@
     </div>
   </div>
   <div class="detail-body">
-    <div class="detail-grid" id="d-stats"></div>
-    <div class="detail-section">
-      <h3>About</h3>
-      <p id="d-about"></p>
-    </div>
-    <div class="detail-section" id="d-services-sec">
-      <h3>Services & Facilities</h3>
-      <ul class="detail-list" id="d-services"></ul>
-    </div>
-    <div class="detail-section">
-      <h3>Operating Hours</h3>
-      <div class="detail-hours" id="d-hours"></div>
-    </div>
-    <div class="detail-section" id="d-contact-sec">
-      <h3>Contact</h3>
-      <ul class="detail-list" id="d-contact"></ul>
+    <div class="detail-empty">
+      <strong>&#x1F6A7; Information Coming Soon</strong>
+      Details for this building have not been filled in yet.
     </div>
   </div>
 </div>
@@ -677,330 +385,142 @@
 <!-- LEGEND -->
 <div id="legend">
   <div class="legend-title">Building Types</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#3B5BDB"></div> Administration</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#0B7285"></div> Academic</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#2F9E44"></div> Science</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#E67700"></div> Student Services</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#862E9C"></div> Arts & Culture</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#1971C2"></div> Sports & Fitness</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#D63939"></div> Health & Chapel</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#3B5BDB"></div> Academic Buildings</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#2F9E44"></div> Gymnasium</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#E67700"></div> Facilities / Canteen</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#C92A2A"></div> Remulla Building</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#0B7285"></div> Engineering</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#20C997"></div> Student Services</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#862E9C"></div> Org / AVR</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#6B7280"></div> Parking</div>
 </div>
+
+<!-- COMPASS -->
+<svg id="compass" viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="26" cy="26" r="25" fill="rgba(20,24,46,0.88)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+  <polygon points="26,8 22,26 26,24 30,26" fill="#FF6B6B"/>
+  <polygon points="26,44 22,26 26,28 30,26" fill="rgba(255,255,255,0.5)"/>
+  <text x="26" y="6" text-anchor="middle" font-size="7" fill="#FF6B6B" font-family="DM Sans,sans-serif" font-weight="700">N</text>
+</svg>
 
 <script>
 (function() {
+  // ── BUILDINGS DATA (info left blank — fill in as needed) ──
   const BUILDINGS = {
-    admin: {
-      name: "Administration Building",
-      emoji: "🏛",
-      type: "Administration",
+    buildingA: {
+      name: "Building A",
+      emoji: "🏫",
+      type: "Academic Building",
       typeColor: "#3B5BDB",
       typeBg: "#DBE4FF",
-      sub: "Main campus hub & offices",
-      floors: "3",
-      capacity: "500",
-      year: "1998",
-      about: "The Administration Building is the heart of Lakeview Academy, housing the offices of the Principal, Vice Principals, Registrar, and all key administrative departments. Designed in classical collegiate style, the building serves as the first point of contact for students, parents, and visitors.",
-      services: [
-        { label: "Registrar's Office", val: "Enrollment, records, credentials" },
-        { label: "Principal's Office", val: "3rd Floor, Suite 301" },
-        { label: "Finance Office", val: "Tuition, billing, scholarships" },
-        { label: "HR Department", val: "Faculty & staff services" },
-        { label: "Conference Rooms", val: "4 rooms, 10–50 capacity" },
-      ],
-      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 6:00 PM",
-               Thu: "7:00 AM – 6:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "8:00 AM – 12:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Main Line", val: "(02) 8123-4567" },
-        { label: "Email", val: "admin@lakeview.edu.ph" },
-        { label: "Fax", val: "(02) 8123-4568" },
-      ],
+      sub: "",
+      about: "",
     },
-    library: {
-      name: "Library & Learning Center",
-      emoji: "📚",
-      type: "Academic",
-      typeColor: "#0B7285",
-      typeBg: "#C5F6FA",
-      sub: "Knowledge hub & digital resources",
-      floors: "2",
-      capacity: "300",
-      year: "2004",
-      about: "The Lakeview Library & Learning Center is a modern two-floor facility with over 45,000 physical volumes, digital databases, and dedicated study spaces. It provides a quiet, inspiring environment for research, reading, and collaborative learning.",
-      services: [
-        { label: "Print Collection", val: "45,000+ books & journals" },
-        { label: "Digital Library", val: "Online databases & e-books" },
-        { label: "Study Rooms", val: "8 private rooms, reservable online" },
-        { label: "Computer Lab", val: "40 workstations, free printing" },
-        { label: "Reading Lounge", val: "Comfortable seating, quiet zone" },
-      ],
-      hours: { Mon: "7:30 AM – 7:00 PM", Tue: "7:30 AM – 7:00 PM", Wed: "7:30 AM – 7:00 PM",
-               Thu: "7:30 AM – 7:00 PM", Fri: "7:30 AM – 6:00 PM", Sat: "8:00 AM – 4:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Library Desk", val: "(02) 8123-4580" },
-        { label: "Email", val: "library@lakeview.edu.ph" },
-        { label: "Renewals", val: "library.lakeview.edu.ph" },
-      ],
-    },
-    science: {
-      name: "Science & Technology Building",
-      emoji: "🔬",
-      type: "Science",
-      typeColor: "#2F9E44",
-      typeBg: "#D3F9D8",
-      sub: "Laboratories & innovation",
-      floors: "3",
-      capacity: "400",
-      year: "2010",
-      about: "The Science & Technology Building houses cutting-edge laboratories for Biology, Chemistry, Physics, and Computer Science. It supports project-based learning and research initiatives, with modern equipment and dedicated faculty mentorship spaces.",
-      services: [
-        { label: "Biology Lab", val: "Fully equipped, BSL-1 certified" },
-        { label: "Chemistry Lab", val: "Fume hoods, glassware, reagents" },
-        { label: "Physics Lab", val: "Optics, mechanics, electronics" },
-        { label: "Computer Lab", val: "60 iMacs + Windows workstations" },
-        { label: "Research Hub", val: "Faculty-student project spaces" },
-      ],
-      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 6:00 PM",
-               Thu: "7:00 AM – 6:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "9:00 AM – 1:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Science Dept.", val: "(02) 8123-4570" },
-        { label: "Email", val: "science@lakeview.edu.ph" },
-        { label: "Lab Booking", val: "labs.lakeview.edu.ph" },
-      ],
-    },
-    gym: {
-      name: "Gymnasium & Fitness Center",
-      emoji: "🏋",
-      type: "Sports & Fitness",
-      typeColor: "#1971C2",
-      typeBg: "#D0EBFF",
-      sub: "Sports, PE, and wellness",
-      floors: "2",
-      capacity: "600",
-      year: "2002",
-      about: "The Lakeview Gymnasium is a multi-purpose sports facility that hosts Physical Education classes, inter-school competitions, and school-wide events. The second floor houses a modern fitness center with cardio machines, free weights, and wellness programs.",
-      services: [
-        { label: "Main Gym Floor", val: "Basketball, volleyball, badminton" },
-        { label: "Fitness Center", val: "2nd Floor – open to students" },
-        { label: "Locker Rooms", val: "Separate M/F, shower facilities" },
-        { label: "PE Storage", val: "Equipment checkout available" },
-        { label: "Dance Studio", val: "Sprung floor, mirrors, sound system" },
-      ],
-      hours: { Mon: "6:00 AM – 8:00 PM", Tue: "6:00 AM – 8:00 PM", Wed: "6:00 AM – 8:00 PM",
-               Thu: "6:00 AM – 8:00 PM", Fri: "6:00 AM – 7:00 PM", Sat: "7:00 AM – 5:00 PM", Sun: "9:00 AM – 2:00 PM" },
-      contact: [
-        { label: "PE Department", val: "(02) 8123-4575" },
-        { label: "Email", val: "pe@lakeview.edu.ph" },
-      ],
-    },
-    arts: {
-      name: "Arts & Music Building",
-      emoji: "🎨",
-      type: "Arts & Culture",
-      typeColor: "#862E9C",
-      typeBg: "#F3D9FA",
-      sub: "Creative arts, music & theater",
-      floors: "2",
-      capacity: "250",
-      year: "2006",
-      about: "The Arts & Music Building fosters creativity and self-expression. It houses Visual Arts studios, Music practice rooms, a black-box Theater space, and the school's award-winning Fine Arts gallery open to the public during exhibit seasons.",
-      services: [
-        { label: "Visual Arts Studios", val: "Painting, sculpture, digital art" },
-        { label: "Music Practice Rooms", val: "8 soundproofed rooms" },
-        { label: "Black-Box Theater", val: "100-seat flexible performance space" },
-        { label: "Gallery Space", val: "Rotating student exhibitions" },
-        { label: "Recording Studio", val: "By appointment only" },
-      ],
-      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 7:00 PM",
-               Thu: "7:00 AM – 7:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "9:00 AM – 3:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Arts Dept.", val: "(02) 8123-4572" },
-        { label: "Email", val: "arts@lakeview.edu.ph" },
-      ],
-    },
-    cafeteria: {
-      name: "Cafeteria & Dining Hall",
-      emoji: "🍽",
-      type: "Student Services",
+    buildingB: {
+      name: "Building B",
+      emoji: "🏫",
+      type: "Academic Building",
       typeColor: "#E67700",
       typeBg: "#FFF3BF",
-      sub: "Food court, nutrition & dining",
-      floors: "1",
-      capacity: "450",
-      year: "2001",
-      about: "Lakeview's Cafeteria provides nutritious, affordable meals for the entire campus community. With multiple food stations including Filipino favorites, a salad bar, and a halal section, it caters to diverse dietary needs. The spacious dining hall also doubles as an event space.",
-      services: [
-        { label: "Main Kitchen", val: "Hot meals, daily rotating menu" },
-        { label: "Snack Bar", val: "Sandwiches, pastries, beverages" },
-        { label: "Salad & Health Bar", val: "Fresh options, vegan-friendly" },
-        { label: "Halal Section", val: "Certified Halal kitchen" },
-        { label: "Catering Services", val: "Campus events & parties" },
-      ],
-      hours: { Mon: "6:30 AM – 5:30 PM", Tue: "6:30 AM – 5:30 PM", Wed: "6:30 AM – 5:30 PM",
-               Thu: "6:30 AM – 5:30 PM", Fri: "6:30 AM – 5:00 PM", Sat: "7:00 AM – 2:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Dining Services", val: "(02) 8123-4585" },
-        { label: "Email", val: "dining@lakeview.edu.ph" },
-        { label: "Catering", val: "catering@lakeview.edu.ph" },
-      ],
-    },
-    chapel: {
-      name: "Lakeview Chapel",
-      emoji: "⛪",
-      type: "Religious & Cultural",
-      typeColor: "#C92A2A",
-      typeBg: "#FFE3E3",
-      sub: "Interfaith worship & reflection",
-      floors: "1",
-      capacity: "200",
-      year: "1990",
-      about: "The Lakeview Chapel is a sacred space welcoming all faiths and beliefs. It hosts regular Catholic Mass, ecumenical services, and quiet reflection times. The Chapel is also available for blessings, prayer gatherings, and spiritual counseling through the Campus Ministry office.",
-      services: [
-        { label: "Daily Mass", val: "Mon–Fri 7:00 AM & 12:00 NN" },
-        { label: "Confession", val: "Tues & Thurs 11:00 AM – 12:00 NN" },
-        { label: "Quiet Hours", val: "Open for reflection daily" },
-        { label: "Campus Ministry", val: "Counseling & retreats" },
-        { label: "Event Blessings", val: "Scheduled with chaplain" },
-      ],
-      hours: { Mon: "6:30 AM – 6:00 PM", Tue: "6:30 AM – 6:00 PM", Wed: "6:30 AM – 6:00 PM",
-               Thu: "6:30 AM – 6:00 PM", Fri: "6:30 AM – 6:00 PM", Sat: "7:00 AM – 5:00 PM", Sun: "6:00 AM – 12:00 PM" },
-      contact: [
-        { label: "Campus Ministry", val: "(02) 8123-4595" },
-        { label: "Email", val: "ministry@lakeview.edu.ph" },
-      ],
-    },
-    health: {
-      name: "Health & Wellness Center",
-      emoji: "🏥",
-      type: "Health Services",
-      typeColor: "#D63939",
-      typeBg: "#FFE3E3",
-      sub: "Medical, dental & counseling",
-      floors: "1",
-      capacity: "80",
-      year: "1999",
-      about: "The Lakeview Health & Wellness Center provides comprehensive health services to students and staff. Staffed by registered nurses, a resident physician, and a licensed counselor, the center handles medical consultations, emergency first aid, mental health support, and dental care.",
-      services: [
-        { label: "Medical Clinic", val: "Physician, daily consultations" },
-        { label: "Dental Clinic", val: "Mon, Wed, Fri only" },
-        { label: "Counseling Room", val: "Confidential mental health support" },
-        { label: "Infirmary", val: "4 beds, rest & recovery" },
-        { label: "First Aid", val: "Emergency response, medications" },
-      ],
-      hours: { Mon: "7:00 AM – 5:00 PM", Tue: "7:00 AM – 5:00 PM", Wed: "7:00 AM – 5:00 PM",
-               Thu: "7:00 AM – 5:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "8:00 AM – 12:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Clinic", val: "(02) 8123-4590" },
-        { label: "Emergency", val: "(02) 8123-4911" },
-        { label: "Email", val: "health@lakeview.edu.ph" },
-      ],
-    },
-    student: {
-      name: "Student Center",
-      emoji: "🎓",
-      type: "Student Services",
-      typeColor: "#F06595",
-      typeBg: "#FFD6E7",
-      sub: "Org room, events & student life",
-      floors: "2",
-      capacity: "300",
-      year: "2008",
-      about: "The Student Center is the social and organizational hub for all student activities. It houses student government offices, organization rooms, a cooperative store, ATM machines, and a student lounge. The rooftop is used for small-scale events and gatherings.",
-      services: [
-        { label: "Student Government", val: "LASSO office, 2nd Floor" },
-        { label: "Organization Rooms", val: "12 rooms for accredited orgs" },
-        { label: "Cooperative Store", val: "Books, supplies, merch" },
-        { label: "Student Lounge", val: "TV, gaming area, bean bags" },
-        { label: "Bulletin Boards", val: "Events, scholarships, OJT postings" },
-      ],
-      hours: { Mon: "7:00 AM – 7:00 PM", Tue: "7:00 AM – 7:00 PM", Wed: "7:00 AM – 7:00 PM",
-               Thu: "7:00 AM – 7:00 PM", Fri: "7:00 AM – 6:00 PM", Sat: "9:00 AM – 3:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "Student Affairs", val: "(02) 8123-4582" },
-        { label: "Email", val: "studentlife@lakeview.edu.ph" },
-      ],
+      sub: "",
+      about: "",
     },
     engineering: {
-      name: "Engineering & Computer Lab",
-      emoji: "💻",
-      type: "Science & Technology",
-      typeColor: "#495057",
-      typeBg: "#E9ECEF",
-      sub: "Robotics, coding & hardware labs",
-      floors: "2",
-      capacity: "200",
-      year: "2015",
-      about: "The Engineering & Computer Lab building is Lakeview's newest technical facility. It supports the school's STEM programs with a dedicated Robotics lab, two computer programming rooms, electronics workbench areas, and a maker space equipped with 3D printers and laser cutters.",
-      services: [
-        { label: "Robotics Lab", val: "LEGO Mindstorms, Arduino kits" },
-        { label: "Programming Rooms", val: "80 workstations, 2 rooms" },
-        { label: "Electronics Bench", val: "Soldering, PCB, prototyping" },
-        { label: "Maker Space", val: "3D printers, laser cutter, CNC" },
-        { label: "Server Room", val: "Campus network infrastructure" },
-      ],
-      hours: { Mon: "7:00 AM – 6:00 PM", Tue: "7:00 AM – 6:00 PM", Wed: "7:00 AM – 6:00 PM",
-               Thu: "7:00 AM – 6:00 PM", Fri: "7:00 AM – 5:00 PM", Sat: "9:00 AM – 1:00 PM", Sun: "Closed" },
-      contact: [
-        { label: "ICT Department", val: "(02) 8123-4576" },
-        { label: "Email", val: "ict@lakeview.edu.ph" },
-      ],
+      name: "Engineering Building",
+      emoji: "⚙️",
+      type: "Academic Building",
+      typeColor: "#0B7285",
+      typeBg: "#C5F6FA",
+      sub: "",
+      about: "",
     },
-    auditorium: {
-      name: "Lakeview Auditorium",
-      emoji: "🎭",
-      type: "Events & Culture",
-      typeColor: "#5C7CFA",
-      typeBg: "#E8EDFF",
-      sub: "Performances, convocations & film",
-      floors: "2",
-      capacity: "800",
-      year: "2005",
-      about: "The Lakeview Auditorium is the premier event venue on campus, seating up to 800 guests. It hosts graduation ceremonies, performing arts productions, school-wide assemblies, and guest speaker events. The stage is equipped with professional sound, lighting, and AV systems.",
-      services: [
-        { label: "Main Stage", val: "800-seat tiered hall" },
-        { label: "AV System", val: "4K projection, surround sound" },
-        { label: "Green Rooms", val: "2 backstage dressing rooms" },
-        { label: "Balcony Seating", val: "200 additional seats" },
-        { label: "Venue Rental", val: "Available for school events" },
-      ],
-      hours: { Mon: "8:00 AM – 9:00 PM", Tue: "8:00 AM – 9:00 PM", Wed: "8:00 AM – 9:00 PM",
-               Thu: "8:00 AM – 9:00 PM", Fri: "8:00 AM – 10:00 PM", Sat: "8:00 AM – 10:00 PM", Sun: "By booking" },
-      contact: [
-        { label: "Events Office", val: "(02) 8123-4560" },
-        { label: "Email", val: "events@lakeview.edu.ph" },
-        { label: "Bookings", val: "events.lakeview.edu.ph" },
-      ],
+    audiovisual: {
+      name: "Audio Visual Room",
+      emoji: "🎬",
+      type: "Academic Facility",
+      typeColor: "#862E9C",
+      typeBg: "#F3D9FA",
+      sub: "",
+      about: "",
     },
-    faculty: {
-      name: "Faculty Offices",
-      emoji: "👨‍🏫",
-      type: "Academic",
+    buildingD: {
+      name: "Building D",
+      emoji: "🏫",
+      type: "Academic Building",
+      typeColor: "#3B5BDB",
+      typeBg: "#DBE4FF",
+      sub: "",
+      about: "",
+    },
+    gac: {
+      name: "GAC Building",
+      emoji: "🏛",
+      type: "Facility",
+      typeColor: "#E67700",
+      typeBg: "#FFF3BF",
+      sub: "",
+      about: "",
+    },
+    gymnasium: {
+      name: "Gymnasium",
+      emoji: "🏋",
+      type: "Sports Facility",
+      typeColor: "#2F9E44",
+      typeBg: "#D3F9D8",
+      sub: "",
+      about: "",
+    },
+    remulla: {
+      name: "Remulla Building",
+      emoji: "🏢",
+      type: "Academic Building",
+      typeColor: "#C92A2A",
+      typeBg: "#FFE3E3",
+      sub: "",
+      about: "",
+    },
+    studyshed: {
+      name: "Student Study Shed",
+      emoji: "📚",
+      type: "Student Services",
       typeColor: "#20C997",
       typeBg: "#C3FAE8",
-      sub: "Department offices & faculty rooms",
-      floors: "2",
-      capacity: "150",
-      year: "2003",
-      about: "The Faculty Offices building houses department chairs and faculty members for consultation, office hours, and academic advising. Each department has a dedicated wing, and faculty are available during posted office hours for student meetings.",
-      services: [
-        { label: "Department Offices", val: "All departments represented" },
-        { label: "Office Hours", val: "See department schedules" },
-        { label: "Advising", val: "Academic & career guidance" },
-        { label: "Faculty Lounge", val: "Staff only area" },
-        { label: "Meeting Rooms", val: "2 small conference rooms" },
-      ],
-      hours: { Mon: "7:00 AM – 5:30 PM", Tue: "7:00 AM – 5:30 PM", Wed: "7:00 AM – 5:30 PM",
-               Thu: "7:00 AM – 5:30 PM", Fri: "7:00 AM – 4:30 PM", Sat: "By appointment", Sun: "Closed" },
-      contact: [
-        { label: "Faculty Desk", val: "(02) 8123-4562" },
-        { label: "Email", val: "faculty@lakeview.edu.ph" },
-      ],
+      sub: "",
+      about: "",
+    },
+    canteen: {
+      name: "Canteen",
+      emoji: "🍽",
+      type: "Dining",
+      typeColor: "#E67700",
+      typeBg: "#FFF3BF",
+      sub: "",
+      about: "",
+    },
+    orghouse: {
+      name: "Org House",
+      emoji: "🏠",
+      type: "Student Organizations",
+      typeColor: "#862E9C",
+      typeBg: "#F3D9FA",
+      sub: "",
+      about: "",
+    },
+    parking: {
+      name: "Parking Area",
+      emoji: "🅿",
+      type: "Facility",
+      typeColor: "#6B7280",
+      typeBg: "#F3F4F6",
+      sub: "",
+      about: "",
     },
   };
 
   let currentId = null;
 
   // ── PAN & ZOOM ──
-  const wrap = document.getElementById('map-wrap');
+  const wrap  = document.getElementById('map-wrap');
   const stage = document.getElementById('map-stage');
   let scale = 1, tx = 0, ty = 0;
   let dragging = false, startX = 0, startY = 0, startTx = 0, startTy = 0;
@@ -1010,27 +530,33 @@
     document.getElementById('zoom-label').textContent = Math.round(scale * 100) + '%';
   }
 
+  function fitToScreen() {
+    const rect = wrap.getBoundingClientRect();
+    const imgW = 299, imgH = 427;
+    scale = Math.min(rect.width / imgW, rect.height / imgH) * 0.88;
+    tx = (rect.width  - imgW * scale) / 2;
+    ty = (rect.height - imgH * scale) / 2;
+    applyTransform();
+  }
+
   window.changeZoom = function(delta) {
     const rect = wrap.getBoundingClientRect();
     const cx = rect.width / 2, cy = rect.height / 2;
-    const newScale = Math.min(3, Math.max(0.4, scale + delta));
+    const newScale = Math.min(6, Math.max(0.4, scale + delta));
     tx = cx - (cx - tx) * (newScale / scale);
     ty = cy - (cy - ty) * (newScale / scale);
     scale = newScale;
     applyTransform();
   };
 
-  window.resetView = function() {
-    scale = 1; tx = 0; ty = 0;
-    applyTransform();
-  };
+  window.resetView = fitToScreen;
 
   wrap.addEventListener('wheel', e => {
     e.preventDefault();
     const rect = wrap.getBoundingClientRect();
     const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    const delta = e.deltaY < 0 ? 0.12 : -0.12;
-    const newScale = Math.min(3, Math.max(0.4, scale + delta));
+    const delta = e.deltaY < 0 ? 0.15 : -0.15;
+    const newScale = Math.min(6, Math.max(0.4, scale + delta));
     tx = mx - (mx - tx) * (newScale / scale);
     ty = my - (my - ty) * (newScale / scale);
     scale = newScale;
@@ -1039,25 +565,18 @@
 
   wrap.addEventListener('mousedown', e => {
     if (e.target.closest('.bld') || e.target.closest('#popup')) return;
-    dragging = true;
-    wrap.classList.add('dragging');
-    startX = e.clientX; startY = e.clientY;
-    startTx = tx; startTy = ty;
+    dragging = true; wrap.classList.add('dragging');
+    startX = e.clientX; startY = e.clientY; startTx = tx; startTy = ty;
   });
-  
   document.addEventListener('mousemove', e => {
     if (!dragging) return;
     tx = startTx + (e.clientX - startX);
     ty = startTy + (e.clientY - startY);
     applyTransform();
   });
-  
-  document.addEventListener('mouseup', () => { 
-    dragging = false; 
-    wrap.classList.remove('dragging'); 
-  });
+  document.addEventListener('mouseup', () => { dragging = false; wrap.classList.remove('dragging'); });
 
-  // Touch support
+  // Touch
   let lastTouchDist = null;
   wrap.addEventListener('touchstart', e => {
     if (e.touches.length === 1) {
@@ -1066,11 +585,11 @@
       startTx = tx; startTy = ty;
     }
     if (e.touches.length === 2) {
-      lastTouchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
-                                  e.touches[0].clientY - e.touches[1].clientY);
+      lastTouchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY);
     }
   }, { passive: true });
-  
   wrap.addEventListener('touchmove', e => {
     if (e.touches.length === 1 && dragging) {
       tx = startTx + (e.touches[0].clientX - startX);
@@ -1078,26 +597,22 @@
       applyTransform();
     }
     if (e.touches.length === 2 && lastTouchDist) {
-      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
-                               e.touches[0].clientY - e.touches[1].clientY);
-      const delta = (dist - lastTouchDist) * 0.005;
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY);
+      const delta = (dist - lastTouchDist) * 0.006;
       const rect = wrap.getBoundingClientRect();
       const mx = (e.touches[0].clientX + e.touches[1].clientX) / 2 - rect.left;
       const my = (e.touches[0].clientY + e.touches[1].clientY) / 2 - rect.top;
-      const newScale = Math.min(3, Math.max(0.4, scale + delta));
+      const newScale = Math.min(6, Math.max(0.4, scale + delta));
       tx = mx - (mx - tx) * (newScale / scale);
       ty = my - (my - ty) * (newScale / scale);
-      scale = newScale;
-      lastTouchDist = dist;
+      scale = newScale; lastTouchDist = dist;
       applyTransform();
     }
     e.preventDefault();
   }, { passive: false });
-  
-  wrap.addEventListener('touchend', () => { 
-    dragging = false; 
-    lastTouchDist = null; 
-  });
+  wrap.addEventListener('touchend', () => { dragging = false; lastTouchDist = null; });
 
   // ── POPUP ──
   window.showPopup = function(event, id) {
@@ -1112,33 +627,22 @@
     document.getElementById('p-type').textContent = b.type;
     document.getElementById('p-type').style.color = b.typeColor;
     document.getElementById('p-btn').style.background = b.typeColor;
+    document.getElementById('p-desc').textContent =
+      b.about ? b.about.substring(0, 120) + (b.about.length > 120 ? '…' : '') :
+      'No description available yet.';
 
-    document.getElementById('p-meta').innerHTML = `
-      <div class="popup-row">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${b.typeColor}" stroke-width="1.5"><path d="M8 1v14M1 8h14"/></svg>
-        <span>${b.floors} floors · Est. ${b.year}</span>
-      </div>
-      <div class="popup-row">
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="${b.typeColor}" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
-        <span>${Object.values(b.hours)[0]}</span>
-      </div>
-    `;
-    document.getElementById('p-desc').textContent = b.about.substring(0, 120) + '…';
-
-    // Position near building on screen
     const mapRect = wrap.getBoundingClientRect();
     const bldEl = document.querySelector(`[data-id="${id}"]`);
     const bldRect = bldEl.getBoundingClientRect();
 
     let px = bldRect.left + bldRect.width / 2 - mapRect.left - 140;
     let py = bldRect.top - mapRect.top - 10;
-
     if (py < 10) py = bldRect.bottom - mapRect.top + 10;
     if (px < 10) px = 10;
     if (px + 280 > mapRect.width - 10) px = mapRect.width - 290;
 
     popup.style.left = px + 'px';
-    popup.style.top = py + 'px';
+    popup.style.top  = py + 'px';
     popup.classList.add('visible');
     popup.style.animation = 'none';
     popup.offsetHeight;
@@ -1156,7 +660,6 @@
   // ── DETAIL PAGE ──
   window.openDetail = function() {
     if (!currentId || !BUILDINGS[currentId]) return;
-    
     const b = BUILDINGS[currentId];
     const page = document.getElementById('detail-page');
 
@@ -1165,45 +668,7 @@
     document.getElementById('d-hero-emoji').textContent = b.emoji;
     document.getElementById('d-badge').textContent = b.type;
     document.getElementById('d-name').textContent = b.name;
-    document.getElementById('d-sub').textContent = b.sub;
-    document.getElementById('d-about').textContent = b.about;
-
-    document.getElementById('d-stats').innerHTML = `
-      <div class="detail-stat">
-        <label>Floors</label>
-        <p>${b.floors}</p>
-      </div>
-      <div class="detail-stat">
-        <label>Capacity</label>
-        <p>${b.capacity}</p>
-      </div>
-      <div class="detail-stat">
-        <label>Year Built</label>
-        <p>${b.year}</p>
-      </div>
-    `;
-
-    document.getElementById('d-services').innerHTML = b.services.map(s => `
-      <li>
-        <strong>${s.label}</strong>
-        <span>${s.val}</span>
-      </li>
-    `).join('');
-
-    const days = Object.keys(b.hours);
-    document.getElementById('d-hours').innerHTML = days.map(d => `
-      <div class="hour-row">
-        <span class="day">${d}</span>
-        <span class="time">${b.hours[d]}</span>
-      </div>
-    `).join('');
-
-    document.getElementById('d-contact').innerHTML = b.contact.map(c => `
-      <li>
-        <strong>${c.label}</strong>
-        <span>${c.val}</span>
-      </li>
-    `).join('');
+    document.getElementById('d-sub').textContent = b.sub || '';
 
     window.closePopup();
     page.classList.add('open');
@@ -1213,15 +678,9 @@
     document.getElementById('detail-page').classList.remove('open');
   };
 
-  // Initialize
-  window.changeZoom(0);
+  // Initialize view to fit the campus map on screen
+  fitToScreen();
 })();
 </script>
-
-<!-- Netlify configuration -->
-<meta name="format-detection" content="telephone=no">
-<meta name="format-detection" content="date=no">
-<meta name="format-detection" content="address=no">
-<meta name="format-detection" content="email=no">
 </body>
 </html>
