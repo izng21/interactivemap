@@ -293,6 +293,18 @@
     transition: background 0.15s;
   }
   .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+  /* ── Mobile overrides ── */
+  @media (hover: none) and (pointer: coarse) {
+    .zone { min-width: 28px; min-height: 28px; }
+    .zone .zone-pin { display: none; }
+    .zoom-btn { width: 48px; height: 48px; font-size: 24px; }
+    .popup-card { width: 100%; border-radius: 20px 20px 0 0; }
+    .popup-overlay { padding: 0; align-items: flex-end; }
+    .header-text h1 { font-size: 13px; }
+    .header-text p { display: none; }
+    .header-hint { font-size: 10px; padding: 4px 10px; }
+  }
 </style>
 </head>
 <body>
@@ -303,7 +315,7 @@
     <h1>PUP Maragondon Campus</h1>
     <p>Campus Interactive Map — Maragondon, Cavite</p>
   </div>
-  <div class="header-hint">🔍 Scroll/pinch to zoom · Drag to pan</div>
+  <div class="header-hint" id="headerHint">🔍 Scroll/pinch to zoom · Drag to pan</div>
 </div>
 
 <div class="map-outer" id="mapOuter">
@@ -446,7 +458,7 @@ const buildings = {
   2:  { name:"Audio Visual Room",          tag:"📽️ Facility",          emoji:"📽️",  desc:"A dedicated space for multimedia presentations, seminars, and instructional activities. Equipped with audio-visual tools such as projectors and sound systems to support interactive learning and academic discussions.", location:"North Wing, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
   3:  { name:"Quality Assurance Center",   tag:"📋 Administration",    emoji:"🏅",  desc:"Manages and oversees academic standards, institutional evaluations, and compliance processes. Serves as the center for maintaining educational quality, accreditation requirements, and continuous improvement initiatives.", location:"North Area, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
   4:  { name:"Building A",                 tag:"🏢 Academic & Admin",  emoji:"🏛️",  desc:"A central administrative and academic building. The first floor houses the Registrar's Office, Office of Student Services, Director's Office, Director's Lounge, and Accounting Office. The second floor is dedicated to classrooms for various academic programs.", location:"Central Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"2 Floors", heroImage:"", gallery:[] },
-  5:  { name:"Study Shed",                 tag:"🌿 Student Space",     emoji:"☀️",  desc:"An open and accessible space designed for students to study, collaborate, and relax. Provides a casual environment for group discussions, individual work, and social interaction between classes.", location:"Open Area, North", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Open during school hours", floors:"Open Air", heroImage:"", gallery:[] },
+  5:  { name:"Study Shed",                 tag:"🌿 Student Space",     emoji:"☀️",  desc:"An open and accessible space designed for students to study, collaborate, and relax. Provides a casual environment for group discussions, individual work, and social interaction between classes.", location:"Open Area, North", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Open during school hours", floors:"Open Air", heroImage:"images/sander.jpg", gallery:["images/sander.jpg"] },
   6:  { name:"Study Shed",                 tag:"🌿 Student Space",     emoji:"🌤️",  desc:"A secondary study area that offers students a quiet and informal setting for studying and socializing. Serves as an alternative space for rest, collaboration, and academic activities during the day.", location:"South Area, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Open during school hours", floors:"Open Air", heroImage:"", gallery:[] },
   7:  { name:"Building B",                 tag:"🏗️ Multi-Purpose",     emoji:"🏢",  desc:"A multi-functional building supporting both academic and student services. Houses the Campus Clinic, Faculty Lounge, Student Council Office, Chemical Laboratory, Facility Management Office, and two classrooms for instruction and laboratory use.", location:"Central-East Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 6:00 PM", floors:"Multi-floor", heroImage:"", gallery:[] },
   8:  { name:"Remulla Building",           tag:"🏫 Classroom",         emoji:"🏫",  desc:"A building donated by the Remulla family, primarily used as a classroom facility. Supports academic activities by providing additional space for lectures and student learning across various programs.", location:"South-Central Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 6:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
@@ -458,6 +470,12 @@ const buildings = {
   14: { name:"Canteen",                    tag:"🍽️ Food Service",       emoji:"🍽️",  desc:"A campus food service area where students and staff can purchase meals, snacks, and beverages. Provides a convenient space for dining and short breaks between classes during the school day.", location:"Central Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
   15: { name:"Canteen",                    tag:"🍽️ Food Service",       emoji:"🥘",  desc:"An additional canteen facility helping accommodate the campus population by offering food and refreshments. Supports student convenience, especially during peak dining hours throughout the school day.", location:"South Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] }
 };
+
+/* Update hint text for touch devices */
+if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+  const hint = document.getElementById('headerHint');
+  if (hint) hint.textContent = '👆 Tap a building · Pinch to zoom';
+}
 
 /* ══════════════════════════════════════════
    PAN & ZOOM  — clean rewrite
@@ -628,7 +646,7 @@ outer.addEventListener('touchmove', e => {
     if (!prev) { tPrevPoints[id] = { ...cur }; return; }
     const dx = cur.x - prev.x;
     const dy = cur.y - prev.y;
-    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) didMove = true;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) didMove = true;
     tx += dx;
     ty += dy;
     clamp();
@@ -673,6 +691,25 @@ outer.addEventListener('touchmove', e => {
 }, { passive: false });
 
 outer.addEventListener('touchend', e => {
+  // --- Tap detection: single finger, minimal movement = treat as click ---
+  if (e.changedTouches.length === 1 && tIds.length <= 1 && !didMove) {
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    if (el) {
+      const zone = el.closest('.zone');
+      if (zone) {
+        const onclickAttr = zone.getAttribute('onclick');
+        if (onclickAttr) {
+          const match = onclickAttr.match(/openPopup\((\d+)\)/);
+          if (match) {
+            e.preventDefault();
+            openPopup(parseInt(match[1], 10));
+          }
+        }
+      }
+    }
+  }
+
   for (const t of e.changedTouches) {
     delete touches[t.identifier];
   }
