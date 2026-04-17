@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PUP Maragondon Campus Map</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a2e1a; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  .header {
+    background: #fff;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    position: relative;
+    z-index: 20;
+    flex-shrink: 0;
+  }
+  .school-logo {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: linear-gradient(135deg, #6b1a1a, #8b2222);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 22px; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(107,26,26,0.4);
+  }
+  .header-text h1 { font-size: 16px; font-weight: 700; color: #6b1a1a; line-height: 1.2; }
+  .header-text p { font-size: 12px; color: #888; margin-top: 2px; }
+  .header-hint {
+    margin-left: auto;
+    background: #fef9ec;
+    border: 1px solid #f0d870;
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 11px;
+    color: #7a6000;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .map-outer {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    cursor: grab;
+    user-select: none;
+  }
+  .map-outer.panning { cursor: grabbing; }
+
+  #mapStage {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+  }
+
+  #mapStage img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: fill;
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .zone {
+    position: absolute;
+    border-radius: 5px;
+    border: 2px solid rgba(255,220,100,0);
+    background: rgba(255,255,200,0);
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: visible;
+  }
+  .zone:hover {
+    background: rgba(255, 235, 100, 0.28);
+    border-color: rgba(255, 210, 50, 0.9);
+    box-shadow: 0 0 0 3px rgba(255,210,50,0.25), inset 0 0 12px rgba(255,230,100,0.15);
+    z-index: 10;
+  }
+  .zone:hover .zone-pin { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  .zone-pin {
+    position: absolute;
+    top: -30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px) scale(0.88);
+    background: #6b1a1a;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+    padding: 3px 9px;
+    border-radius: 20px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    z-index: 20;
+  }
+  .zone-pin::after {
+    content: '';
+    position: absolute;
+    bottom: -5px; left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #6b1a1a;
+    border-bottom: none;
+  }
+
+  .zoom-controls {
+    position: absolute;
+    bottom: 24px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 50;
+  }
+  .zoom-btn {
+    width: 38px; height: 38px;
+    background: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #6b1a1a;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s, transform 0.1s;
+    line-height: 1;
+  }
+  .zoom-btn:hover { background: #fef0f0; transform: scale(1.08); }
+  .zoom-btn:active { transform: scale(0.96); }
+  .zoom-reset { font-size: 16px; }
+
+  /* ── Mini Popup ── */
+  .popup-overlay {
+    display: none; position: fixed; inset: 0;
+    z-index: 200; pointer-events: none;
+    align-items: flex-end; justify-content: center;
+    padding: 0 16px 80px;
+  }
+  .popup-overlay.active { display: flex; }
+  .popup-card {
+    pointer-events: all;
+    background: #fff; border-radius: 20px;
+    width: 320px; max-width: 100%;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.28);
+    overflow: hidden;
+    animation: popIn 0.2s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.88) translateY(12px); opacity: 0; }
+    to   { transform: scale(1) translateY(0); opacity: 1; }
+  }
+  .popup-header {
+    background: #6b1a1a; padding: 14px 16px 12px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  }
+  .popup-emoji { font-size: 28px; line-height: 1; flex-shrink: 0; }
+  .popup-header-text { flex: 1; min-width: 0; }
+  .popup-tag {
+    display: inline-block; background: rgba(255,255,255,0.18); color: #ffd9a0;
+    font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .popup-title { font-size: 15px; font-weight: 700; color: #fff; line-height: 1.25; }
+  .popup-x {
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 26px; height: 26px; color: #fff; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s;
+  }
+  .popup-x:hover { background: rgba(255,255,255,0.3); }
+  .popup-body { padding: 12px 16px 14px; }
+  .popup-desc {
+    font-size: 12px; color: #555; line-height: 1.6; margin-bottom: 12px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .popup-actions { display: flex; gap: 8px; }
+  .btn { flex: 1; padding: 9px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; border: none; transition: opacity 0.15s, transform 0.1s; }
+  .btn:hover { opacity: 0.88; transform: translateY(-1px); }
+  .btn-close { background: #f0f0f0; color: #666; }
+  .btn-detail { background: #6b1a1a; color: #fff; }
+
+  /* ── Full-page Detail ── */
+  .detail-page {
+    display: none; position: fixed; inset: 0;
+    background: #f5f2ee; z-index: 400;
+    overflow-y: auto; scrollbar-width: thin;
+    animation: pageIn 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .detail-page.active { display: block; }
+  @keyframes pageIn {
+    from { transform: translateY(30px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .dp-hero {
+    width: 100%; height: 260px;
+    background: #1a0505; position: relative;
+    overflow: hidden; display: flex; align-items: center; justify-content: center;
+  }
+  .dp-hero-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .dp-hero-img.has-src { display: block; }
+  .dp-hero-placeholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 8px; color: rgba(255,255,255,0.3); font-size: 12px; font-weight: 600; letter-spacing: 0.4px;
+  }
+  .dp-hero-placeholder .ph-icon { font-size: 52px; }
+  .dp-hero-img.has-src ~ .dp-hero-placeholder { display: none; }
+  .dp-back {
+    position: absolute; top: 14px; left: 14px; z-index: 10;
+    background: rgba(0,0,0,0.5); border: none; border-radius: 22px;
+    color: #fff; font-size: 12px; font-weight: 700;
+    padding: 7px 14px 7px 10px;
+    display: flex; align-items: center; gap: 5px;
+    cursor: pointer; backdrop-filter: blur(6px);
+    transition: background 0.15s;
+  }
+  .dp-back:hover { background: rgba(0,0,0,0.7); }
+  .dp-tagbar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.65));
+    padding: 32px 20px 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .dp-tag-pill {
+    background: #6b1a1a; color: #ffd9a0;
+    font-size: 10px; font-weight: 700;
+    padding: 4px 12px; border-radius: 20px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .dp-body { padding: 22px 20px 50px; max-width: 680px; margin: 0 auto; }
+  .dp-name { font-size: 26px; font-weight: 800; color: #1a1a1a; line-height: 1.2; margin-bottom: 4px; }
+  .dp-location { font-size: 13px; color: #999; margin-bottom: 16px; }
+  .dp-desc {
+    font-size: 14px; color: #444; line-height: 1.8;
+    margin-bottom: 24px; padding-bottom: 22px;
+    border-bottom: 2px solid #ede8e3;
+  }
+  .dp-section-label {
+    font-size: 11px; font-weight: 800; color: #6b1a1a;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+  }
+  .dp-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 30px; }
+  .dp-info-card {
+    background: #fff; border-radius: 14px; padding: 14px 16px;
+    border: 1px solid #ede8e3; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .dp-info-label { font-size: 10px; color: #aaa; margin-bottom: 4px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dp-info-val { font-size: 13px; color: #222; font-weight: 700; line-height: 1.35; }
+  .dp-gallery-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  }
+  .dp-gallery-item {
+    aspect-ratio: 1; border-radius: 12px; overflow: hidden;
+    background: #ede8e3; cursor: pointer; position: relative;
+  }
+  .dp-gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+  .dp-gallery-item:hover img { transform: scale(1.06); }
+  .dp-gallery-placeholder {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 5px; color: #b8a898; font-size: 10px; font-weight: 600;
+    border: 2px dashed #c8bdb0; border-radius: 12px; background: #f0ebe5;
+  }
+  .dp-gallery-placeholder .ph-icon { font-size: 20px; }
+
+  /* Lightbox */
+  .lightbox {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.93); z-index: 600;
+    align-items: center; justify-content: center;
+  }
+  .lightbox.active { display: flex; }
+  .lightbox img { max-width: 94vw; max-height: 90vh; border-radius: 10px; object-fit: contain; }
+  .lightbox-close {
+    position: absolute; top: 16px; right: 16px;
+    background: rgba(255,255,255,0.15); border: none; border-radius: 50%;
+    width: 40px; height: 40px; color: #fff; font-size: 20px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+
+  /* ── Mobile overrides ── */
+  @media (hover: none) and (pointer: coarse) {
+    .zone { min-width: 28px; min-height: 28px; }
+    .zone .zone-pin { display: none; }
+    .zoom-btn { width: 48px; height: 48px; font-size: 24px; }
+    .popup-card { width: 100%; border-radius: 20px 20px 0 0; }
+    .popup-overlay { padding: 0; align-items: flex-end; }
+    .header-text h1 { font-size: 13px; }
+    .header-text p { display: none; }
+    .header-hint { font-size: 10px; padding: 4px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="school-logo">🎓</div>
+  <div class="header-text">
+    <h1>PUP Maragondon Campus</h1>
+    <p>Campus Interactive Map — Maragondon, Cavite</p>
+  </div>
+  <div class="header-hint" id="headerHint">🔍 Scroll/pinch to zoom · Drag to pan</div>
+</div>
+
+<div class="map-outer" id="mapOuter">
+  <div id="mapStage">
+    <img src="PUP_MC_MAP.png" alt="PUP Maragondon Campus Map" draggable="false" id="mapImg">
+
+    <!-- B1: Engineering Building -->
+    <div class="zone" onclick="openPopup(1)" style="left:39.81%;top:4.69%;width:36.11%;height:4.69%">
+      <div class="zone-pin">Engineering Building</div>
+    </div>
+    <!-- B2: Audio Visual Room -->
+    <div class="zone" onclick="openPopup(2)" style="left:77.78%;top:4.95%;width:5.09%;height:4.17%">
+      <div class="zone-pin">Audio Visual Room</div>
+    </div>
+    <!-- B3: Quality Assurance Center -->
+    <div class="zone" onclick="openPopup(3)" style="left:87.22%;top:14.48%;width:6.85%;height:6.15%">
+      <div class="zone-pin">QA Center</div>
+    </div>
+    <!-- B4: Building A -->
+    <div class="zone" onclick="openPopup(4)" style="left:44.81%;top:11.67%;width:9.26%;height:17.81%">
+      <div class="zone-pin">Building A</div>
+    </div>
+    <!-- B5: Study Shed (top) -->
+    <div class="zone" onclick="openPopup(5)" style="left:75.37%;top:23.75%;width:2.41%;height:8.54%">
+      <div class="zone-pin">Study Shed</div>
+    </div>
+    <!-- B6: Study Shed (bottom) -->
+    <div class="zone" onclick="openPopup(6)" style="left:23.70%;top:36.98%;width:1.85%;height:6.98%">
+      <div class="zone-pin">Study Shed</div>
+    </div>
+    <!-- B7: Building B -->
+    <div class="zone" onclick="openPopup(7)" style="left:30.37%;top:33.12%;width:39.63%;height:2.66%">
+      <div class="zone-pin">Building B</div>
+    </div>
+    <!-- B8: Remulla Building -->
+    <div class="zone" onclick="openPopup(8)" style="left:19.81%;top:32.29%;width:5.74%;height:3.65%">
+      <div class="zone-pin">Remulla Building</div>
+    </div>
+    <!-- B9: Chapel -->
+    <div class="zone" onclick="openPopup(9)" style="left:29.81%;top:40.21%;width:3.52%;height:1.98%">
+      <div class="zone-pin">Chapel</div>
+    </div>
+    <!-- B10: Gymnasium -->
+    <div class="zone" onclick="openPopup(10)" style="left:27.96%;top:47.92%;width:19.07%;height:14.95%">
+      <div class="zone-pin">Gymnasium</div>
+    </div>
+    <!-- B11: Library -->
+    <div class="zone" onclick="openPopup(11)" style="left:27.96%;top:44.38%;width:19.07%;height:3.54%">
+      <div class="zone-pin">Library</div>
+    </div>
+    <!-- B12: Org House Plaza -->
+    <div class="zone" onclick="openPopup(12)" style="left:25.37%;top:4.79%;width:14.26%;height:14.06%">
+      <div class="zone-pin">Org House Plaza</div>
+    </div>
+    <!-- B13: Building D -->
+    <div class="zone" onclick="openPopup(13)" style="left:87.04%;top:6.15%;width:7.04%;height:7.71%">
+      <div class="zone-pin">Building D</div>
+    </div>
+    <!-- B14: Canteen (top) -->
+    <div class="zone" onclick="openPopup(14)" style="left:34.63%;top:29.69%;width:5.93%;height:1.67%">
+      <div class="zone-pin">Canteen</div>
+    </div>
+    <!-- B15: Canteen (bottom) -->
+    <div class="zone" onclick="openPopup(15)" style="left:23.33%;top:28.02%;width:6.30%;height:2.03%">
+      <div class="zone-pin">Canteen</div>
+    </div>
+
+  </div>
+
+  <!-- Zoom Controls -->
+  <div class="zoom-controls">
+    <button class="zoom-btn" onclick="zoomBy(1.3)" title="Zoom in">+</button>
+    <button class="zoom-btn zoom-reset" onclick="resetView()" title="Reset view">⌂</button>
+    <button class="zoom-btn" onclick="zoomBy(0.7)" title="Zoom out">−</button>
+  </div>
+</div>
+
+<!-- Mini Popup (no backdrop — floats over map) -->
+<div class="popup-overlay" id="popupOverlay">
+  <div class="popup-card">
+    <div class="popup-header">
+      <span class="popup-emoji" id="pEmoji"></span>
+      <div class="popup-header-text">
+        <div class="popup-tag" id="pTag"></div>
+        <div class="popup-title" id="pTitle"></div>
+      </div>
+      <button class="popup-x" onclick="closePopup()">✕</button>
+    </div>
+    <div class="popup-body">
+      <div class="popup-desc" id="pDesc"></div>
+      <div class="popup-actions">
+        <button class="btn btn-close" onclick="closePopup()">Close</button>
+        <!-- Corrected Syntax Bug Here -->
+        <button class="btn btn-detail">Full View →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Full-page Detail -->
+<div class="detail-page" id="detailPage">
+
+  <!-- Hero image -->
+  <div class="dp-hero">
+    <img class="dp-hero-img" id="dpHeroImg" src="" alt="">
+    <div class="dp-hero-placeholder">
+      <span class="ph-icon" id="dpHeroEmoji"></span>
+      <span>No photo yet</span>
+    </div>
+    <button class="dp-back" onclick="closeDetail()">← Back to Map</button>
+    <div class="dp-tagbar">
+      <span class="dp-tag-pill" id="dpTag"></span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="dp-body">
+    <div class="dp-name" id="dpName"></div>
+    <div class="dp-location" id="dpLocation"></div>
+    <div class="dp-desc" id="dpDesc"></div>
+
+    <!-- Info cards -->
+    <div class="dp-section-label">Building Details</div>
+    <div class="dp-info-grid" id="dpInfoGrid"></div>
+
+    <!-- Gallery -->
+    <div class="dp-section-label">Photo Gallery</div>
+    <div class="dp-gallery-grid" id="dpGallery"></div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<script>
+const buildings = {
+  1:  { name:"Engineering Building",      tag:"⚙️ Academic",          emoji:"⚙️",  desc:"The primary academic hub for engineering students, this building houses the Multi-Purpose Hall, Computer Laboratory, Mechanical Engineering Laboratory, and Electrical Engineering Laboratory. It also contains eight classrooms used for lectures, laboratory work, and technical instruction.", location:"West Wing, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 6:00 PM", floors:"Multi-floor", heroImage:"images/engineeringbuilding.jpg", gallery:["images/engrbld1.jpg", "images/jepreee.jpg", "images/tres martires.jpg"] },
+  2:  { name:"Audio Visual Room",          tag:"📽️ Facility",          emoji:"📽️",  desc:"A dedicated space for multimedia presentations, seminars, and instructional activities. Equipped with audio-visual tools such as projectors and sound systems to support interactive learning and academic discussions.", location:"North Wing, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
+  3:  { name:"Quality Assurance Center",   tag:"📋 Administration",    emoji:"🏅",  desc:"Manages and oversees academic standards, institutional evaluations, and compliance processes. Serves as the center for maintaining educational quality, accreditation requirements, and continuous improvement initiatives.", location:"North Area, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
+  4:  { name:"Building A",                 tag:"🏢 Academic & Admin",  emoji:"🏛️",  desc:"A central administrative and academic building. The first floor houses the Registrar's Office, Office of Student Services, Director's Office, Director's Lounge, and Accounting Office. The second floor is dedicated to classrooms for various academic programs.", location:"Central Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"2 Floors", heroImage:"", gallery:["images/aceformHAHAHA.jpg"] },
+  5:  { name:"Study Shed",                 tag:"🌿 Student Space",     emoji:"☀️",  desc:"An open and accessible space designed for students to study, collaborate, and relax. Provides a casual environment for group discussions, individual work, and social interaction between classes.", location:"Open Area, North", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Open during school hours", floors:"Open Air", heroImage:"images/studyshed1.jpg", gallery:["images/sander.jpg", "images/tolog na arvin.jpg"] },
+  6:  { name:"Study Shed",                 tag:"🌿 Student Space",     emoji:"🌤️",  desc:"A secondary study area that offers students a quiet and informal setting for studying and socializing. Serves as an alternative space for rest, collaboration, and academic activities during the day.", location:"South Area, Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Open during school hours", floors:"Open Air", heroImage:"", gallery:["images/studyshedarvin.jpg"] },
+  7:  { name:"Building B",                 tag:"🏗️ Multi-Purpose",     emoji:"🏢",  desc:"A multi-functional building supporting both academic and student services. Houses the Campus Clinic, Faculty Lounge, Student Council Office, Chemical Laboratory, Facility Management Office, and two classrooms for instruction and laboratory use.", location:"Central-East Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 6:00 PM", floors:"Multi-floor", heroImage:"", gallery:[] },
+  8:  { name:"Remulla Building",           tag:"🏫 Classroom",         emoji:"🏫",  desc:"A building donated by the Remulla family, primarily used as a classroom facility. Supports academic activities by providing additional space for lectures and student learning across various programs.", location:"South-Central Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 6:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
+  9:  { name:"Chapel",                     tag:"⛪ Spiritual",          emoji:"⛪",  desc:"A quiet and sacred space within the campus for prayer, reflection, and spiritual activities. Open to students, faculty, and staff seeking a place for personal devotion or small religious gatherings.", location:"Central-South Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Open during school hours", floors:"Ground Floor", heroImage:"", gallery:[] },
+  10: { name:"Gymnasium",                  tag:"🏋️ Sports & Events",   emoji:"🏋️",  desc:"A large facility used for major campus events, sports activities, and physical wellness programs. Accommodates assemblies, competitions, and recreational activities for students, faculty, and staff.", location:"East Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 8:00 PM", floors:"Main Hall + Bleachers", heroImage:"", gallery:["images/gym lesson.jpg",  ""] },
+  11: { name:"Library",                    tag:"📚 Academic Resource",  emoji:"📚",  desc:"A resource center providing students access to books, academic references, and study materials. Offers a quiet environment conducive to reading, research, and independent learning for all campus members.", location:"East Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Fri, 8:00 AM – 5:00 PM", floors:"Second Floor of Gymnasium", heroImage:"", gallery:[] },
+  12: { name:"Org House Plaza",            tag:"🤝 Student Orgs",       emoji:"🏡",  desc:"A designated area for academic and student organizations. Serves as a hub for organizational activities, meetings, and collaboration among different student groups active on campus.", location:"South-West Campus", contact:"Student Affairs Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 8:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
+  13: { name:"Building D",                 tag:"🏚️ Future Use",         emoji:"🏗️",  desc:"Not currently in active use, this building may serve as a potential space for future development, renovation, or repurposing depending on campus needs and institutional plans.", location:"North-West Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Not in active use", floors:"Ground Floor", heroImage:"", gallery:[] },
+  14: { name:"Canteen",                    tag:"🍽️ Food Service",       emoji:"🍽️",  desc:"A campus food service area where students and staff can purchase meals, snacks, and beverages. Provides a convenient space for dining and short breaks between classes during the school day.", location:"Central Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] },
+  15: { name:"Canteen",                    tag:"🍽️ Food Service",       emoji:"🥘",  desc:"An additional canteen facility helping accommodate the campus population by offering food and refreshments. Supports student convenience, especially during peak dining hours throughout the school day.", location:"South Campus", contact:"PUP Maragondon Office", email:"maragondon@pup.edu.ph", hours:"Mon – Sat, 7:00 AM – 5:00 PM", floors:"Ground Floor", heroImage:"", gallery:[] }
+};
+
+/* Update hint text for touch devices */
+if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+  const hint = document.getElementById('headerHint');
+  if (hint) hint.textContent = '👆 Tap a building · Pinch to zoom';
+}
+
+const outer  = document.getElementById('mapOuter');
+const stage  = document.getElementById('mapStage');
+const mapImg = document.getElementById('mapImg');
+
+let imgW = 1080, imgH = 1920; 
+let scale = 1;
+let minScale = 0.2;
+const maxScale = 8;
+let tx = 0, ty = 0;
+let didMove = false;
+
+function commit() {
+  stage.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+}
+
+function clamp() {
+  const ow = outer.clientWidth;
+  const oh = outer.clientHeight;
+  const sw = imgW * scale;   
+  const sh = imgH * scale;   
+  const marginX = Math.min(ow * 0.2, sw * 0.2);
+  const marginY = Math.min(oh * 0.2, sh * 0.2);
+  tx = Math.min(ow - marginX, Math.max(-(sw - marginX), tx));
+  ty = Math.min(oh - marginY, Math.max(-(sh - marginY), ty));
+}
+
+function fitToView() {
+  const ow = outer.clientWidth;
+  const oh = outer.clientHeight;
+  scale = Math.min(ow / imgW, oh / imgH);
+  minScale = scale * 0.5; 
+  tx = (ow - imgW * scale) / 2;
+  ty = (oh - imgH * scale) / 2;
+  commit();
+}
+
+function resetView() { fitToView(); }
+
+function zoomToward(newScale, cx, cy) {
+  newScale = Math.min(maxScale, Math.max(minScale, newScale));
+  const ratio = newScale / scale;
+  tx = cx - ratio * (cx - tx);
+  ty = cy - ratio * (cy - ty);
+  scale = newScale;
+  clamp();
+  commit();
+}
+
+function zoomBy(factor, cx, cy) {
+  const ow = outer.clientWidth, oh = outer.clientHeight;
+  zoomToward(scale * factor, cx ?? ow / 2, cy ?? oh / 2);
+}
+
+function initMap() {
+  imgW = mapImg.naturalWidth  || 1080;
+  imgH = mapImg.naturalHeight || 1920;
+  stage.style.width  = imgW + 'px';
+  stage.style.height = imgH + 'px';
+  fitToView();
+}
+mapImg.onload = initMap;
+if (mapImg.complete && mapImg.naturalWidth) initMap();
+window.addEventListener('resize', fitToView);
+
+/* ── Mouse drag to pan ── */
+let mdDragging = false, mdX0, mdY0, mdTx0, mdTy0;
+
+outer.addEventListener('mousedown', e => {
+  if (e.button !== 0) return;
+  e.preventDefault();
+  mdDragging = true;
+  didMove = false;
+  mdX0 = e.clientX; mdY0 = e.clientY;
+  mdTx0 = tx; mdTy0 = ty;
+  outer.classList.add('panning');
+});
+
+window.addEventListener('mousemove', e => {
+  if (!mdDragging) return;
+  const dx = e.clientX - mdX0;
+  const dy = e.clientY - mdY0;
+  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didMove = true;
+  tx = mdTx0 + dx;
+  ty = mdTy0 + dy;
+  clamp();
+  commit();
+});
+
+window.addEventListener('mouseup', () => {
+  mdDragging = false;
+  outer.classList.remove('panning');
+});
+
+/* ── Scroll wheel zoom ── */
+outer.addEventListener('wheel', e => {
+  e.preventDefault();
+  const rect = outer.getBoundingClientRect();
+  const cx = e.clientX - rect.left;
+  const cy = e.clientY - rect.top;
+  const factor = e.deltaY < 0 ? 1.1 : 0.9;
+  zoomToward(scale * factor, cx, cy);
+}, { passive: false });
+
+/* ── Touch: single-finger pan, two-finger pinch+pan ── */
+let touches = {};   
+
+function touchPoint(t) {
+  return { x: t.clientX, y: t.clientY };
+}
+
+function midpoint(a, b) {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
+function dist(a, b) {
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+let tPrevPoints = null;   
+let tIds =[];            
+
+outer.addEventListener('touchstart', e => {
+  e.preventDefault();
+  didMove = false;
+  for (const t of e.changedTouches) {
+    touches[t.identifier] = touchPoint(t);
+  }
+  tIds = Object.keys(touches).slice(0, 2).map(Number);
+  tPrevPoints = tIds.reduce((o, id) => { o[id] = { ...touches[id] }; return o; }, {});
+}, { passive: false });
+
+outer.addEventListener('touchmove', e => {
+  e.preventDefault();
+  for (const t of e.changedTouches) {
+    if (touches[t.identifier] !== undefined) {
+      touches[t.identifier] = touchPoint(t);
+    }
+  }
+
+  const ids = tIds.filter(id => touches[id] !== undefined);
+  if (ids.length === 0 || !tPrevPoints) return;
+
+  if (ids.length === 1) {
+    const id = ids[0];
+    const cur = touches[id];
+    const prev = tPrevPoints[id];
+    if (!prev) { tPrevPoints[id] = { ...cur }; return; }
+    const dx = cur.x - prev.x;
+    const dy = cur.y - prev.y;
+    if (Math.abs(dx) > 8 || Math.abs(dy) > 8) didMove = true;
+    tx += dx;
+    ty += dy;
+    clamp();
+    commit();
+  } else {
+    const id0 = ids[0], id1 = ids[1];
+    const cur0 = touches[id0], cur1 = touches[id1];
+    const prev0 = tPrevPoints[id0], prev1 = tPrevPoints[id1];
+    if (!prev0 || !prev1) { tPrevPoints[id0] = { ...cur0 }; tPrevPoints[id1] = { ...cur1 }; return; }
+
+    const prevMid = midpoint(prev0, prev1);
+    const curMid  = midpoint(cur0,  cur1);
+    const prevD   = dist(prev0, prev1);
+    const curD    = dist(cur0,  cur1);
+
+    tx += curMid.x - prevMid.x;
+    ty += curMid.y - prevMid.y;
+
+    if (prevD > 1) {
+      const rect = outer.getBoundingClientRect();
+      const cx = curMid.x - rect.left;
+      const cy = curMid.y - rect.top;
+      const newScale = Math.min(maxScale, Math.max(minScale, scale * (curD / prevD)));
+      const ratio = newScale / scale;
+      tx = cx - ratio * (cx - tx);
+      ty = cy - ratio * (cy - ty);
+      scale = newScale;
+    }
+
+    didMove = true;
+    clamp();
+    commit();
+  }
+
+  for (const id of ids) {
+    tPrevPoints[id] = { ...touches[id] };
+  }
+}, { passive: false });
+
+outer.addEventListener('touchend', e => {
+  // --- Tap detection: single finger, minimal movement = treat as click ---
+  if (e.changedTouches.length === 1 && tIds.length <= 1 && !didMove) {
+    const t = e.changedTouches[0];
+    const el = document.elementFromPoint(t.clientX, t.clientY);
+    if (el) {
+      const zone = el.closest('.zone');
+      if (zone) {
+        e.preventDefault();
+        zone.click(); // Uses simulated click directly instead of string regex
+      }
+    }
+  }
+
+  for (const t of e.changedTouches) {
+    delete touches[t.identifier];
+  }
+  tIds = Object.keys(touches).slice(0, 2).map(Number);
+  tPrevPoints = tIds.reduce((o, id) => { o[id] = { ...touches[id] }; return o; }, {});
+}, { passive: false });
+
+document.querySelectorAll('.zone').forEach(z => {
+  z.addEventListener('click', e => {
+    if (didMove) { e.stopImmediatePropagation(); didMove = false; }
+  });
+});
+
+/* ── Popup & Detail logic ── */
+let currentId = null;
+
+function openPopup(id) {
+  if (didMove) return;
+  currentId = id;
+  const b = buildings[id];
+  document.getElementById('pEmoji').textContent  = b.emoji;
+  document.getElementById('pTag').textContent    = b.tag;
+  document.getElementById('pTitle').textContent  = b.name;
+  document.getElementById('pDesc').textContent   = b.desc;
+
+  // Correct Routing Fix: Go to Specialized HTML page if building 1, else generic overlay
+  const detailBtn = document.querySelector('.btn-detail');
+  detailBtn.onclick = function() {
+    if (id === 1) {
+      window.location.href = 'building_detail.html';
+    } else {
+      openDetail();
+    }
+  };
+
+  document.getElementById('popupOverlay').classList.add('active');
+}
+
+function closePopup() {
+  document.getElementById('popupOverlay').classList.remove('active');
+}
+
+function openDetail() {
+  const b = buildings[currentId];
+  closePopup();
+
+  // Hero image
+  const heroImg = document.getElementById('dpHeroImg');
+  if (b.heroImage) {
+    heroImg.src = b.heroImage;
+    heroImg.classList.add('has-src');
+  } else {
+    heroImg.src = '';
+    heroImg.classList.remove('has-src');
+  }
+  document.getElementById('dpHeroEmoji').textContent = b.emoji;
+  document.getElementById('dpTag').textContent       = b.tag;
+  document.getElementById('dpName').textContent      = b.name;
+  document.getElementById('dpLocation').textContent  = '📍 ' + b.location;
+  document.getElementById('dpDesc').textContent      = b.desc;
+
+  // Info cards
+  const infoData =[
+    { icon:'📞', label:'Contact',  val: b.contact },
+    { icon:'✉️',  label:'Email',    val: b.email   },
+    { icon:'🕐', label:'Hours',    val: b.hours   },
+    { icon:'🏗️', label:'Floors',   val: b.floors  },
+  ];
+  document.getElementById('dpInfoGrid').innerHTML = infoData.map(d => `
+    <div class="dp-info-card">
+      <div class="dp-info-label">${d.icon} ${d.label}</div>
+      <div class="dp-info-val">${d.val || '—'}</div>
+    </div>`).join('');
+
+  // Gallery
+  const gallery = b.gallery ||[];
+  const slots = 6;
+  let galleryHTML = '';
+  for (let i = 0; i < slots; i++) {
+    if (gallery[i]) {
+      galleryHTML += `
+        <div class="dp-gallery-item" onclick="openLightbox('${gallery[i]}')">
+          <img src="${gallery[i]}" alt="Photo ${i+1}">
+        </div>`;
+    } else {
+      galleryHTML += `
+        <div class="dp-gallery-placeholder">
+          <span class="ph-icon">🖼️</span>
+          <span>No photo</span>
+        </div>`;
+    }
+  }
+  document.getElementById('dpGallery').innerHTML = galleryHTML;
+
+  const page = document.getElementById('detailPage');
+  page.scrollTop = 0;
+  page.classList.add('active');
+  requestAnimationFrame(() => {
+    if (typeof updateGallery === 'function') updateGallery();
+  });
+}
+
+function closeDetail() {
+  document.getElementById('detailPage').classList.remove('active');
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('active');
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+}
+</script>
+</body>
+</html>
