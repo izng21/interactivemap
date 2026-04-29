@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engineering Building — PUP Maragondon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --maroon: #6b1a1a;
+    --maroon-dark: #4a1010;
+    --maroon-light: #8b2525;
+    --gold: #c9a84c;
+    --gold-light: #f0d870;
+    --cream: #faf7f2;
+    --surface: #ffffff;
+    --text-primary: #1a1410;
+    --text-secondary: #6b5f56;
+    --text-muted: #a09488;
+    --border: #e8e0d8;
+    --hero-h: 100vh;
+    --nav-h: 64px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* ── STICKY NAV ── */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    transition: background 0.35s ease, box-shadow 0.35s ease, backdrop-filter 0.35s ease;
+  }
+
+  .nav.scrolled {
+    background: rgba(250, 247, 242, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .nav-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 100px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+  }
+
+  .nav.scrolled .nav-back {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    color: #fff;
+  }
+
+  .nav-back:hover { opacity: 0.85; }
+
+  .nav-back svg { width: 14px; height: 14px; }
+
+  .nav-title {
+    color: transparent;
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-weight: 400;
+    transition: color 0.35s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav.scrolled .nav-title { color: var(--text-primary); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    width: 100%;
+    height: var(--hero-h);
+    overflow: hidden;
+    background: var(--maroon-dark);
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #3a0a0a 0%, #6b1a1a 40%, #2a0808 100%);
+  }
+
+  .hero-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    transition: transform 0.1s linear;
+    opacity: 0.75;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(10,2,2,0.15) 0%,
+      rgba(10,2,2,0.05) 35%,
+      rgba(10,2,2,0.5) 72%,
+      rgba(10,2,2,0.92) 100%
+    );
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 40px 56px;
+    max-width: 900px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(201,168,76,0.18);
+    border: 1px solid rgba(201,168,76,0.45);
+    color: var(--gold-light);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+
+  .hero-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(38px, 6vw, 72px);
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .hero-meta-item svg { opacity: 0.7; width: 14px; height: 14px; }
+
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 20px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    animation: hintPulse 2.5s ease-in-out infinite;
+  }
+
+  .scroll-arrow {
+    width: 28px; height: 28px;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  @keyframes hintPulse {
+    0%, 100% { opacity: 0.5; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(4px); }
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    position: relative;
+    z-index: 2;
+    background: var(--cream);
+  }
+
+  .content-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px 100px;
+  }
+
+  /* ── INFO STRIP ── */
+  .info-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 60px;
+    margin-top: -36px;
+    position: relative;
+    z-index: 3;
+  }
+
+  .info-card {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 20px 22px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  }
+
+  .info-card-icon {
+    width: 38px; height: 38px;
+    background: #fdf1f1;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+
+  .info-card-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .info-card-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.4;
+  }
+
+  /* ── TWO COLUMN LAYOUT ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    margin-bottom: 60px;
+    align-items: start;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--maroon);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+
+  .section-body {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.85;
+  }
+
+  /* ── FLOOR PLAN ── */
+  .floorplan-wrap {
+    background: var(--surface);
+    border-radius: 24px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  }
+
+  .floorplan-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 20px;
+    gap: 0;
+    background: #fdfaf7;
+  }
+
+  .fp-tab {
+    padding: 14px 18px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.2s, border-color 0.2s;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+  }
+
+  .fp-tab.active {
+    color: var(--maroon);
+    border-bottom-color: var(--maroon);
+  }
+
+  .floorplan-viewer {
+    position: relative;
+    padding: 32px;
+    min-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9f5f0;
+  }
+
+  /* ── FLOOR PLAN IMAGES ── */
+  .fp-layer {
+    width: 100%;
+    opacity: 0;
+    transform: scale(0.97);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fp-layer.visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .fp-layer img {
+    max-width: 100%;
+    height: auto;
+    max-height: 450px; /* prevents the image from getting too tall */
+    object-fit: contain;
+    border-radius: 8px; /* gives the image slightly rounded corners */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* optional: gives the image a nice pop */
+  }
+
+  /* ── FEATURES LIST ── */
+  .features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 24px;
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .feature-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--maroon);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  .feature-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── GALLERY ── */
+  .gallery-section {
+    margin-bottom: 60px;
+  }
+
+  .gallery-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .gallery-controls {
+    display: flex;
+    gap: 8px;
+  }
+
+  .gallery-btn {
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    color: var(--text-primary);
+  }
+
+  .gallery-btn:hover {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  .gallery-btn svg { width: 16px; height: 16px; }
+
+  .gallery-track-outer {
+    overflow: hidden;
+    border-radius: 20px;
+  }
+
+  .gallery-track {
+    display: flex;
+    gap: 16px;
+    transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .gallery-slide {
+    flex-shrink: 0;
+    width: calc(33.333% - 11px);
+    aspect-ratio: 4/3;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .gallery-slide img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .gallery-slide:hover img { transform: scale(1.05); }
+
+  .gallery-placeholder {
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #f5efe8, #ede5da);
+    color: var(--text-muted);
+  }
+
+  .gallery-placeholder .gp-icon { font-size: 28px; opacity: 0.5; }
+  .gallery-placeholder .gp-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+
+  .gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .gallery-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .gallery-dot.active {
+    background: var(--maroon);
+    transform: scale(1.3);
+  }
+
+  /* ── LIGHTBOX ── */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,0,0,0.95);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: lbIn 0.25s ease;
+  }
+
+  .lightbox.active { display: flex; }
+
+  @keyframes lbIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 88vh;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+
+  .lb-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .lb-close:hover { background: rgba(255,255,255,0.25); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 40px 0;
+  }
+
+  /* ── CONTACT CARD ── */
+  .contact-card {
+    background: linear-gradient(135deg, var(--maroon-dark), var(--maroon));
+    border-radius: 24px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .contact-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: 60px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .contact-text h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .contact-text p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s;
+    border: none;
+  }
+
+  .contact-link:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .contact-link.primary {
+    background: var(--gold);
+    color: var(--maroon-dark);
+  }
+
+  .contact-link.secondary {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .content-inner { padding: 40px 20px 80px; }
+    .info-strip { grid-template-columns: 1fr 1fr; }
+    .two-col { grid-template-columns: 1fr; gap: 28px; }
+    .hero-content { padding: 0 20px 48px; }
+    .gallery-slide { width: calc(80% - 8px); }
+    .contact-card { flex-direction: column; align-items: flex-start; }
+    .contact-links { flex-direction: column; width: 100%; }
+    .contact-link { justify-content: center; }
+    .hero-scroll-hint { display: none; }
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up {
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav" id="nav">
+  <a href="index.html" class="nav-back">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 4L6 8l4 4"/>
+    </svg>
+    Back to Map
+  </a>
+  <span class="nav-title" id="navTitle">Engineering Building</span>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <img class="hero-img" id="heroImg" src="images/engineeringbuilding.jpg"
+       onerror="this.style.opacity=0"
+       alt="Engineering Building">
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag fade-up">
+      ⚙️ &nbsp; Academic Building
+    </div>
+    <h1 class="hero-name fade-up delay-1" id="heroName">Engineering Building</h1>
+    <div class="hero-meta fade-up delay-2">
+      <div class="hero-meta-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 2C5.79 2 4 3.79 4 6c0 3.5 4 8 4 8s4-4.5 4-8c0-2.21-1.79-4-4-4z"/>
+          <circle cx="8" cy="6" r="1.5"/>
+        </svg>
+        West Wing, Campus
+      </div>
+      <div class="hero-meta-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="3" width="12" height="11" rx="1.5"/>
+          <path d="M2 7h12M6 3v4M10 3v4"/>
+        </svg>
+        Mon – Sat, 7:00 AM – 9:00 PM
+      </div>
+      <div class="hero-meta-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="1" y="4" width="14" height="9" rx="1.5"/>
+          <path d="M1 8h14M5 4V2M11 4V2"/>
+        </svg>
+        Multi-floor
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll-hint">
+    <div class="scroll-arrow">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M6 2v8M3 7l3 3 3-3"/>
+      </svg>
+    </div>
+    Scroll to explore
+  </div>
+</div>
+
+<!-- ── TAB BAR ── -->
+<div style="
+  background:#fff;
+  border-bottom:1px solid #e8e0d8;
+  display:flex;
+  justify-content:center;
+  padding:0 40px;
+  position:sticky;
+  top:64px;
+  z-index:50;
+  box-shadow:0 2px 12px rgba(0,0,0,0.05);
+">
+  <a href="eb_detail.html" style="
+    padding:18px 32px;
+    font-size:11px;
+    font-weight:700;
+    color:#6b1a1a;
+    border-bottom:2.5px solid #6b1a1a;
+    text-transform:uppercase;
+    letter-spacing:0.8px;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'DM Sans',sans-serif;
+  ">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/>
+      <rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/>
+    </svg>
+    Overview
+  </a>
+  <a href="eb_fplan.html" style="
+    padding:18px 32px;
+    font-size:11px;
+    font-weight:700;
+    color:#a09488;
+    border-bottom:2.5px solid transparent;
+    text-transform:uppercase;
+    letter-spacing:0.8px;
+    text-decoration:none;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-family:'DM Sans',sans-serif;
+    transition:color 0.2s;
+  " onmouseover="this.style.color='#1a1410'" onmouseout="this.style.color='#a09488'">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="1" y="1" width="14" height="14" rx="1.5"/>
+      <path d="M1 6h14M1 11h14M6 6v9M11 1v5"/>
+    </svg>
+    Floor Plan
+  </a>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+  <div class="content-inner">
+
+    <!-- INFO STRIP -->
+    <div class="info-strip">
+      <div class="info-card">
+        <div class="info-card-icon">📞</div>
+        <div class="info-card-label">Contact</div>
+        <div class="info-card-val">PUP Maragondon Office</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">✉️</div>
+        <div class="info-card-label">Email</div>
+        <div class="info-card-val">maragondon@pup.edu.ph</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">🕐</div>
+        <div class="info-card-label">Hours</div>
+        <div class="info-card-val">Mon – Sat<br>7:00 AM – 9:00 PM</div>
+      </div>
+      <div class="info-card">
+        <div class="info-card-icon">🏗️</div>
+        <div class="info-card-label">Floors</div>
+        <div class="info-card-val">Multi-floor</div>
+      </div>
+    </div>
+
+    <!-- TWO COL: DESCRIPTION + FLOOR PLAN -->
+    <div class="two-col">
+      <!-- Description -->
+      <div>
+        <p class="section-eyebrow">About this Building</p>
+        <h2 class="section-title">A Hub for Engineering Excellence</h2>
+        <p class="section-body">
+          The primary academic hub for engineering students, this building houses the Multi-Purpose Hall, Computer Laboratory, Mechanical Engineering Laboratory, and Electrical Engineering Laboratory. It also contains eight classrooms used for lectures, laboratory work, and technical instruction.
+        </p>
+
+        <div class="features-list" style="margin-top: 28px;">
+          <div class="feature-item">
+            <div class="feature-dot"></div>
+            <div class="feature-text">Multi-Purpose Hall for assemblies & events</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-dot"></div>
+            <div class="feature-text">Computer Laboratory with modern workstations</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-dot"></div>
+            <div class="feature-text">Mechanical Engineering Laboratory</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-dot"></div>
+            <div class="feature-text">Electrical Engineering Laboratory</div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-dot"></div>
+            <div class="feature-text">8 lecture & laboratory classrooms</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Floor Plan -->
+      <div>
+        <p class="section-eyebrow">Floor Plan</p>
+        <h2 class="section-title">Building Layout</h2>
+        <div class="floorplan-wrap">
+          
+          <!-- Tabs to cycle the floors -->
+          <div class="floorplan-tabs">
+            <div class="fp-tab active" onclick="switchFloor(this, 1)">Ground Floor</div>
+            <div class="fp-tab" onclick="switchFloor(this, 2)">2nd Floor</div>
+            <div class="fp-tab" onclick="switchFloor(this, 3)">3rd Floor</div>
+            <div class="fp-tab" onclick="switchFloor(this, 4)">4th Floor</div>
+          </div>
+          
+          <div class="floorplan-viewer">
+            <!-- Floor 1 Image -->
+            <div class="fp-layer visible" id="floor1">
+              <img src="images/engr_floor1.png" alt="Ground Floor Plan">
+            </div>
+
+            <!-- Floor 2 Image (hidden by default) -->
+            <div class="fp-layer" id="floor2" style="display:none">
+              <img src="images/engr_floor2.png" alt="2nd Floor Plan">
+            </div>
+
+            <!-- Floor 3 Image (hidden by default) -->
+            <div class="fp-layer" id="floor3" style="display:none">
+              <img src="images/engr_floor3.png" alt="3rd Floor Plan">
+            </div>
+
+            <!-- Floor 4 Image (hidden by default) -->
+            <div class="fp-layer" id="floor4" style="display:none">
+              <img src="images/engr_floor4.png" alt="4th Floor Plan">
+          </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- GALLERY -->
+    <div class="gallery-section">
+      <div class="gallery-header">
+        <div>
+          <p class="section-eyebrow">Photo Gallery</p>
+          <h2 class="section-title" style="margin-bottom:0">Inside & Around</h2>
+        </div>
+        <div class="gallery-controls">
+          <button class="gallery-btn" onclick="slideGallery(-1)" title="Previous">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 4L6 8l4 4"/>
+            </svg>
+          </button>
+          <button class="gallery-btn" onclick="slideGallery(1)" title="Next">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 4l4 4-4 4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="gallery-track-outer">
+        <div class="gallery-track" id="galleryTrack">
+          <!-- Used string backticks (`) for innerHTML to prevent potential parsing errors inside nested quotes -->
+          <div class="gallery-slide" onclick="openDetailLightbox('images/engrbld1.jpg')">
+            <img src="images/engrbld1.jpg" alt="Engineering Building" >
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/engrbld2.jpg')">
+            <img src="images/engrbld2.jpg" alt="Lab" >
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/engrbld3.jpg')">
+            <img src="images/engrbld3.jpg" alt="Campus" >
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/engrbld4.jpg')">
+            <img src="images/engrbld4.jpg" alt="Campus" >
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/engrbld5.jpg')">
+            <img src="images/engrbld5.jpg" alt="Campus" >
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/engrbld6.jpg')">
+            <img src="images/engrbld6.jpg" alt="Campus" >
+          </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-dots" id="galleryDots">
+        <div class="gallery-dot active" onclick="goToSlide(0)"></div>
+        <div class="gallery-dot" onclick="goToSlide(1)"></div>
+        <div class="gallery-dot" onclick="goToSlide(2)"></div>
+        <div class="gallery-dot" onclick="goToSlide(3)"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CONTACT CARD -->
+    <div class="contact-card">
+      <div class="contact-text">
+        <h3>Get in Touch</h3>
+        <p>Reach out to the PUP Maragondon campus office for inquiries about facilities, reservations, or academic information.</p>
+      </div>
+      <div class="contact-links">
+        <a href="mailto:maragondon@pup.edu.ph" class="contact-link primary">
+          ✉️ &nbsp; Send Email
+        </a>
+        <a href="#" class="contact-link secondary">
+          📞 &nbsp; Call Office
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="lightbox" id="detailLightbox" onclick="closeDetailLightbox()">
+  <button class="lb-close" onclick="closeDetailLightbox()">✕</button>
+  <img id="detailLightboxImg" src="" alt="">
+</div>
+
+<script>
+  /* ── SCROLL: collapsing hero + sticky nav ── */
+  const nav = document.getElementById('nav');
+  const hero = document.getElementById('hero');
+  const heroImg = document.getElementById('heroImg');
+  const heroH = window.innerHeight;
+
+  window.addEventListener('scroll', () => {
+    if (!nav) return; 
+    const scrollY = window.scrollY;
+    const progress = Math.min(scrollY / (heroH * 0.6), 1);
+
+    if (scrollY > 60) {
+      nav.classList.add('scrolled');
+    } else {
+      nav.classList.remove('scrolled');
+    }
+
+    if (heroImg) {
+      const scale = 1 + progress * 0.08;
+      const translateY = scrollY * 0.35;
+      heroImg.style.transform = `scale(${scale}) translateY(${translateY * 0.5}px)`;
+    }
+  }, { passive: true });
+
+  /* ── FLOOR PLAN TABS ── */
+  let currentFloor = 1;
+
+  function switchFloor(tab, floorNum) {
+    if (floorNum === currentFloor) return;
+
+    // Update tabs
+    document.querySelectorAll('.fp-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    // Fix: Clear out transitions safely preventing overlapping states on fast double clicks
+    [1, 2, 3, 4].forEach(f => {
+      const el = document.getElementById('floor' + f);
+      if (!el) return;
+      if (f === floorNum) {
+        el.style.display = 'block';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => { el.classList.add('visible'); });
+        });
+      } else {
+        el.classList.remove('visible');
+        setTimeout(() => { 
+          if (currentFloor !== f) el.style.display = 'none'; 
+        }, 350);
+      }
+    });
+
+    currentFloor = floorNum;
+  }
+
+  /* ── GALLERY CAROUSEL ── */
+  const track = document.getElementById('galleryTrack');
+  const dots = document.querySelectorAll('.gallery-dot');
+  let currentSlide = 0;
+  const totalSlides = dots.length;
+
+  function updateGallery() {
+    if (!track.children[0]) return;
+    const slideW = track.children[0].offsetWidth;
+    if (slideW === 0) return;
+    track.style.transform = `translateX(-${currentSlide * (slideW + 16)}px)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  }
+
+  function slideGallery(dir) {
+    currentSlide = Math.max(0, Math.min(totalSlides - 1, currentSlide + dir));
+    updateGallery();
+  }
+
+  function goToSlide(i) {
+    currentSlide = i;
+    updateGallery();
+  }
+
+  window.addEventListener('resize', updateGallery);
+
+  /* ── LIGHTBOX ── */
+  function openDetailLightbox(src) {
+    document.getElementById('detailLightboxImg').src = src;
+    document.getElementById('detailLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetailLightbox() {
+    document.getElementById('detailLightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeDetailLightbox();
+  });
+</script>
+</body>
+</html>
