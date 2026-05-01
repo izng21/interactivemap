@@ -20,6 +20,25 @@
     z-index: 20;
     flex-shrink: 0;
   }
+  .btn-main-page {
+  margin-left: 10px;
+  background: #6b1a1a;
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  padding: 7px 16px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+ }
+ .btn-main-page:hover { background: #8b2222; transform: translateY(-1px); }
   .school-logo {
     width: 46px; height: 46px; border-radius: 50%;
     background: linear-gradient(135deg, #6b1a1a, #8b2222);
@@ -322,6 +341,9 @@
     <p>Campus Interactive Map — Maragondon, Cavite</p>
   </div>
   <div class="header-hint" id="headerHint">🔍 Scroll/pinch to zoom · Drag to pan</div>
+  <a href="https://pup-maragaccre.page.gd/" class="btn-main-page">
+  ← Go Back to Main Page
+  </a>
 </div>
 
 <div class="map-outer" id="mapOuter">
