@@ -330,10 +330,62 @@
     .header-text p { display: none; }
     .header-hint { font-size: 10px; padding: 4px 10px; }
   }
+ #loadingScreen {
+  position: fixed;
+  inset: 0;
+  background: #6b1a1a;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  transition: opacity 0.5s ease;
+  }
+  #loadingScreen.hidden {
+  opacity: 0;
+  pointer-events: none;
+  }
+  .loading-logo img {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 4px 24px rgba(0,0,0,0.4));
+  animation: logoPulse 1.5s ease-in-out infinite;
+  }
+  @keyframes logoPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+  }
+  .loading-bar-track {
+  width: 200px;
+  height: 6px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 999px;
+  overflow: hidden;
+  }
+  .loading-bar-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f0d870, #ffe033);
+  border-radius: 999px;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(255,220,50,0.6);
+  }
 </style>
 </head>
 <body>
-
+<!-- Loading Screen -->
+<div id="loadingScreen">
+  <div class="loading-logo">
+    <img src="images/PUPLogo.png" alt="PUP Logo">
+  </div>
+  <div class="loading-bar-track">
+    <div class="loading-bar-fill" id="loadingBar"></div>
+  </div>
+</div>
+ 
 <div class="header">
   <div class="school-logo"><img src="images/PUPLogo.png" alt="🎓"></div>
   <div class="header-text">
@@ -833,6 +885,27 @@ function openLightbox(src) {
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('active');
 }
+
+/* ── Loading Screen ── */
+(function() {
+  const screen = document.getElementById('loadingScreen');
+  const bar = document.getElementById('loadingBar');
+  let progress = 0;
+  const interval = setInterval(() => {
+    progress += Math.random() * 18 + 5;
+    if (progress >= 100) {
+      progress = 100;
+      bar.style.width = '100%';
+      clearInterval(interval);
+      setTimeout(() => {
+        screen.classList.add('hidden');
+        setTimeout(() => screen.remove(), 500);
+      }, 300);
+    } else {
+      bar.style.width = progress + '%';
+    }
+  }, 120);
+})();
 </script>
 </body>
 </html>
