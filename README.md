@@ -103,11 +103,9 @@ interactivemap/
 
 ## 📸 Screenshots
 
-> _Add screenshots of the map and floor plan pages here._
-
 | Campus Map | Building Detail | Floor Plan |
 |---|---|---|
-| *(screenshot)* | *(screenshot)* | *(screenshot)* |
+| ![Map](images/screenshot1.png) | ![Map](images/screenshot2.png) | ![Map](images/screenshot3.png) |
 
 ---
 
