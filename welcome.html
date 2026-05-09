@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Welcome — PUP Maragondon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --maroon: #6b1a1a;
+    --maroon-dark: #4a1010;
+    --maroon-light: #8b2525;
+    --gold: #c9a84c;
+    --gold-light: #f0d870;
+    --cream: #faf7f2;
+    --surface: #ffffff;
+    --text-primary: #1a1410;
+    --text-secondary: #6b5f56;
+    --text-muted: #a09488;
+    --border: #e8e0d8;
+    --hero-h: 100vh;
+    --nav-h: 64px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--text-primary);
+    overflow-x: hidden;
+  }
+
+  /* ── STICKY NAV ── */
+  .nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: var(--nav-h);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    gap: 16px;
+    transition: background 0.35s ease, box-shadow 0.35s ease, backdrop-filter 0.35s ease;
+  }
+
+  .nav.scrolled {
+    background: rgba(250, 247, 242, 0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 0 var(--border);
+  }
+
+  .nav-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 100px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+    letter-spacing: 0.2px;
+    text-decoration: none;
+  }
+
+  .nav.scrolled .nav-back {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    color: #fff;
+  }
+
+  .nav-back:hover { opacity: 0.85; }
+  .nav-back svg { width: 14px; height: 14px; }
+
+  .nav-title {
+    color: transparent;
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-weight: 400;
+    transition: color 0.35s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .nav.scrolled .nav-title { color: var(--text-primary); }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    width: 100%;
+    height: var(--hero-h);
+    overflow: hidden;
+    background: var(--maroon-dark);
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #3a0a0a 0%, #6b1a1a 40%, #2a0808 100%);
+  }
+
+  .hero-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .hero-img {
+    position: absolute;
+    inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform-origin: center center;
+    transition: transform 0.1s linear;
+    opacity: 0.75;
+  }
+
+  .hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      rgba(10,2,2,0.15) 0%,
+      rgba(10,2,2,0.05) 35%,
+      rgba(10,2,2,0.5) 72%,
+      rgba(10,2,2,0.92) 100%
+    );
+  }
+
+  .hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 0 40px 56px;
+    max-width: 900px;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(201,168,76,0.18);
+    border: 1px solid rgba(201,168,76,0.45);
+    color: var(--gold-light);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 18px;
+  }
+
+  .hero-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(38px, 6vw, 72px);
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.05;
+    margin-bottom: 16px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-meta {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .hero-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .hero-meta-item svg { opacity: 0.7; width: 14px; height: 14px; }
+
+  .hero-scroll-hint {
+    position: absolute;
+    bottom: 20px;
+    right: 40px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255,255,255,0.45);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    animation: hintPulse 2.5s ease-in-out infinite;
+  }
+
+  .scroll-arrow {
+    width: 28px; height: 28px;
+    border: 1.5px solid rgba(255,255,255,0.25);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  @keyframes hintPulse {
+    0%, 100% { opacity: 0.5; transform: translateY(0); }
+    50% { opacity: 0.9; transform: translateY(4px); }
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    position: relative;
+    z-index: 2;
+    background: var(--cream);
+  }
+
+  .content-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 60px 40px 100px;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-eyebrow {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--maroon);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+  }
+
+  .section-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text-primary);
+    margin-bottom: 16px;
+    line-height: 1.2;
+  }
+
+  /* ── DIRECTOR WELCOME ── */
+  .welcome-section {
+    margin-bottom: 64px;
+  }
+
+  .welcome-card {
+    background: var(--surface);
+    border-radius: 28px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.06);
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+  }
+
+  .welcome-portrait-col {
+    background: linear-gradient(160deg, var(--maroon-dark) 0%, var(--maroon) 100%);
+    padding: 48px 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .welcome-portrait-col::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .welcome-portrait-col::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: -40px;
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    background: rgba(201,168,76,0.08);
+  }
+
+  .director-photo-wrap {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 3px solid rgba(201,168,76,0.5);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 1;
+    background: rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .director-photo-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .director-photo-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+  }
+
+  .director-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 17px;
+    font-weight: 400;
+    color: #fff;
+    text-align: center;
+    margin-bottom: 4px;
+    position: relative;
+    z-index: 1;
+    line-height: 1.3;
+  }
+
+  .director-title {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .director-divider {
+    width: 40px;
+    height: 1px;
+    background: rgba(201,168,76,0.4);
+    margin: 16px auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .director-campus {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    line-height: 1.5;
+  }
+
+  .welcome-message-col {
+    padding: 48px 52px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .welcome-quote-mark {
+    font-family: 'DM Serif Display', serif;
+    font-size: 80px;
+    line-height: 0.6;
+    color: var(--maroon);
+    opacity: 0.15;
+    margin-bottom: 12px;
+    display: block;
+    user-select: none;
+  }
+
+  .welcome-message-text {
+    font-size: 16px;
+    line-height: 1.9;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  .welcome-message-text strong {
+    font-style: normal;
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .welcome-signature {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .welcome-signature-line {
+    width: 40px;
+    height: 2px;
+    background: linear-gradient(to right, var(--maroon), var(--gold));
+    border-radius: 2px;
+  }
+
+  .welcome-signature-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 15px;
+    color: var(--maroon);
+    font-style: italic;
+  }
+
+  /* ── VIDEO PLAYER ── */
+  .video-section {
+    margin-bottom: 60px;
+  }
+
+  .video-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .video-main {
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 16/9;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+    margin-bottom: 16px;
+  }
+
+  .video-main video,
+  .video-main iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+  }
+
+  .video-placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: linear-gradient(135deg, #1a0505 0%, #3a0a0a 50%, #1a0505 100%);
+    cursor: pointer;
+    transition: opacity 0.3s;
+  }
+
+  .video-placeholder.hidden { display: none; }
+
+  .play-btn-big {
+    width: 72px; height: 72px;
+    background: rgba(201,168,76,0.9);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.2s, background 0.2s;
+    box-shadow: 0 8px 32px rgba(201,168,76,0.4);
+  }
+
+  .video-placeholder:hover .play-btn-big {
+    transform: scale(1.1);
+    background: #c9a84c;
+  }
+
+  .play-btn-big svg { width: 28px; height: 28px; margin-left: 4px; }
+
+  .video-placeholder-text {
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .video-thumbs {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    scrollbar-width: none;
+  }
+
+  .video-thumbs::-webkit-scrollbar { display: none; }
+
+  .video-thumb {
+    flex-shrink: 0;
+    width: 160px;
+    aspect-ratio: 16/9;
+    border-radius: 10px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    border: 2px solid transparent;
+    transition: border-color 0.2s, transform 0.2s;
+    background: #111;
+  }
+
+  .video-thumb.active { border-color: var(--maroon); }
+  .video-thumb:hover { transform: translateY(-2px); }
+
+  .video-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+  }
+
+  .video-thumb:hover img,
+  .video-thumb.active img { opacity: 1; }
+
+  .video-thumb-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.2);
+  }
+
+  .thumb-play {
+    width: 32px; height: 32px;
+    background: rgba(255,255,255,0.85);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .thumb-play svg { width: 12px; height: 12px; margin-left: 2px; }
+
+  .video-thumb-label {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 6px 8px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .video-count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fdf1f1;
+    color: var(--maroon);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(107,26,26,0.12);
+  }
+
+  /* ── GALLERY ── */
+  .gallery-section { margin-bottom: 60px; }
+
+  .gallery-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .gallery-controls { display: flex; gap: 8px; }
+
+  .gallery-btn {
+    width: 40px; height: 40px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.1s;
+    color: var(--text-primary);
+  }
+
+  .gallery-btn:hover {
+    background: var(--maroon);
+    border-color: var(--maroon);
+    color: #fff;
+    transform: scale(1.05);
+  }
+
+  .gallery-btn svg { width: 16px; height: 16px; }
+
+  .gallery-track-outer {
+    overflow: hidden;
+    border-radius: 20px;
+  }
+
+  .gallery-track {
+    display: flex;
+    gap: 16px;
+    transition: transform 0.45s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .gallery-slide {
+    flex-shrink: 0;
+    width: calc(33.333% - 11px);
+    aspect-ratio: 4/3;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    position: relative;
+  }
+
+  .gallery-slide img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .gallery-slide:hover img { transform: scale(1.05); }
+
+  .gallery-placeholder {
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #f5efe8, #ede5da);
+    color: var(--text-muted);
+  }
+
+  .gallery-placeholder .gp-icon { font-size: 28px; opacity: 0.5; }
+  .gallery-placeholder .gp-label { font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+
+  .gallery-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 16px;
+  }
+
+  .gallery-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .gallery-dot.active {
+    background: var(--maroon);
+    transform: scale(1.3);
+  }
+
+  /* ── LIGHTBOX ── */
+  .lightbox {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,0,0,0.95);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    animation: lbIn 0.25s ease;
+  }
+
+  .lightbox.active { display: flex; }
+
+  @keyframes lbIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .lightbox img {
+    max-width: 90vw;
+    max-height: 88vh;
+    border-radius: 12px;
+    object-fit: contain;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+
+  .lb-close {
+    position: absolute;
+    top: 20px; right: 20px;
+    width: 44px; height: 44px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.2s;
+  }
+
+  .lb-close:hover { background: rgba(255,255,255,0.25); }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 40px 0;
+  }
+
+  /* ── CONTACT CARD ── */
+  .contact-card {
+    background: linear-gradient(135deg, var(--maroon-dark), var(--maroon));
+    border-radius: 24px;
+    padding: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .contact-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+
+  .contact-card::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; right: 60px;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .contact-text h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 24px;
+    font-weight: 400;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .contact-text p {
+    font-size: 14px;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .contact-links {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: opacity 0.2s, transform 0.15s;
+    border: none;
+  }
+
+  .contact-link:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  .contact-link.primary { background: var(--gold); color: var(--maroon-dark); }
+
+  .contact-link.secondary {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .content-inner { padding: 40px 20px 80px; }
+    .hero-content { padding: 0 20px 48px; }
+    .welcome-card { grid-template-columns: 1fr; }
+    .welcome-portrait-col { padding: 40px 24px 32px; }
+    .welcome-message-col { padding: 32px 24px 40px; }
+    .gallery-slide { width: calc(80% - 8px); }
+    .contact-card { flex-direction: column; align-items: flex-start; }
+    .contact-links { flex-direction: column; width: 100%; }
+    .contact-link { justify-content: center; }
+    .hero-scroll-hint { display: none; }
+    .video-thumb { width: 130px; }
+    .play-btn-big { width: 56px; height: 56px; }
+    .play-btn-big svg { width: 22px; height: 22px; }
+  }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up { opacity: 0; animation: fadeUp 0.6s ease forwards; }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ── -->
+<nav class="nav" id="nav">
+  <a href="index.html" class="nav-back">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 4L6 8l4 4"/>
+    </svg>
+    Back to Map
+  </a>
+  <span class="nav-title">Welcome — PUP Maragondon</span>
+</nav>
+
+<!-- ── HERO ── -->
+<div class="hero" id="hero">
+  <div class="hero-bg"></div>
+  <img class="hero-img" id="heroImg" src="images/campus_hero.jpg"
+       onerror="this.style.opacity=0"
+       alt="PUP Maragondon Campus">
+  <div class="hero-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-tag fade-up">
+      🏛️ &nbsp; PUP Maragondon
+    </div>
+    <h1 class="hero-name fade-up delay-1">Welcome to Our Campus</h1>
+    <div class="hero-meta fade-up delay-2">
+      <div class="hero-meta-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 2C5.79 2 4 3.79 4 6c0 3.5 4 8 4 8s4-4.5 4-8c0-2.21-1.79-4-4-4z"/>
+          <circle cx="8" cy="6" r="1.5"/>
+        </svg>
+        Maragondon, Cavite
+      </div>
+      <div class="hero-meta-item">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 1L10.4 6H15l-3.9 3 1.4 5L8 11l-4.5 3 1.4-5L1 6h4.6L8 1z"/>
+        </svg>
+        Polytechnic University of the Philippines
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll-hint">
+    <div class="scroll-arrow">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path d="M6 2v8M3 7l3 3 3-3"/>
+      </svg>
+    </div>
+    Scroll to explore
+  </div>
+</div>
+
+<!-- ── CONTENT ── -->
+<div class="content">
+  <div class="content-inner">
+
+    <!-- DIRECTOR'S WELCOME -->
+    <div class="welcome-section fade-up">
+      <p class="section-eyebrow">A Message from Leadership</p>
+      <h2 class="section-title">Director's Welcome</h2>
+
+      <div class="welcome-card">
+        <!-- Portrait Column -->
+        <div class="welcome-portrait-col">
+          <div class="director-photo-wrap">
+            <img src="images/director.jpg" alt="Campus Director"
+                 onerror="this.parentElement.innerHTML='<div class=\'director-photo-placeholder\'>👤</div>'">
+          </div>
+          <div class="director-name">Dr. [Director's Full Name]</div>
+          <div class="director-divider"></div>
+          <div class="director-title">Campus Director</div>
+          <div style="height: 8px;"></div>
+          <div class="director-campus">Polytechnic University<br>of the Philippines<br>Maragondon Campus</div>
+        </div>
+
+        <!-- Message Column -->
+        <div class="welcome-message-col">
+          <span class="welcome-quote-mark">"</span>
+          <p class="welcome-message-text">
+            On behalf of the faculty, staff, and the entire PUP Maragondon community, I extend my warmest welcome to each and every one of you. 
+            <br><br>
+            <strong>This campus stands as a testament to our commitment</strong> to providing quality, accessible, and relevant education to every Filipino. We believe that knowledge is the most powerful tool for transforming lives and communities, and it is our mission to equip you with the skills, values, and character needed to thrive in a rapidly changing world.
+            <br><br>
+            As you explore our facilities, programs, and opportunities, know that you are joining a community dedicated to excellence, integrity, and service. Your journey here is not just about academic achievement — it is about growing as a person, building lifelong connections, and contributing meaningfully to society.
+            <br><br>
+            We are honored to walk alongside you in this journey. Welcome to PUP Maragondon — your home of learning and growth.
+          </p>
+          <div class="welcome-signature">
+            <div class="welcome-signature-line"></div>
+            <div class="welcome-signature-text">Dr. [Director's Full Name], Campus Director</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- VIDEO PLAYER -->
+    <div class="video-section">
+      <div class="video-header">
+        <div>
+          <p class="section-eyebrow">Video Gallery</p>
+          <h2 class="section-title" style="margin-bottom:0">Campus Highlights</h2>
+        </div>
+        <div class="video-count-badge">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="5,3 13,8 5,13"/>
+          </svg>
+          <span id="videoCountLabel">1 Video</span>
+        </div>
+      </div>
+
+      <!-- Main player -->
+      <div class="video-main" id="videoMain">
+        <video id="mainVideoEl" controls preload="metadata" style="display:none"></video>
+        <iframe id="mainIframeEl" allowfullscreen allow="autoplay; encrypted-media" style="display:none"></iframe>
+
+        <!-- Shown when no video is playing yet -->
+        <div class="video-placeholder" id="videoPlaceholder" onclick="playVideo(0)">
+          <div class="play-btn-big">
+            <svg viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+          </div>
+          <span class="video-placeholder-text">Click to play first video</span>
+        </div>
+      </div>
+
+      <!-- Thumbnail strip -->
+      <div class="video-thumbs" id="videoThumbs">
+
+        <div class="video-thumb active" data-index="0"
+             data-type="local" data-src="videos/campus_welcome.mp4"
+             onclick="playVideo(0)">
+          <img src="images/videothumb1.jpg" alt="Campus Video thumbnail"
+               onerror="this.style.display='none'">
+          <div class="video-thumb-overlay">
+            <div class="thumb-play">
+              <svg viewBox="0 0 16 16" fill="#333"><polygon points="4,2 13,8 4,14"/></svg>
+            </div>
+          </div>
+          <div class="video-thumb-label">Campus Tour</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- GALLERY -->
+    <div class="gallery-section">
+      <div class="gallery-header">
+        <div>
+          <p class="section-eyebrow">Photo Gallery</p>
+          <h2 class="section-title" style="margin-bottom:0">Life on Campus</h2>
+        </div>
+        <div class="gallery-controls">
+          <button class="gallery-btn" onclick="slideGallery(-1)" title="Previous">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 4L6 8l4 4"/>
+            </svg>
+          </button>
+          <button class="gallery-btn" onclick="slideGallery(1)" title="Next">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 4l4 4-4 4"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="gallery-track-outer">
+        <div class="gallery-track" id="galleryTrack">
+          <div class="gallery-slide" onclick="openDetailLightbox('images/campus_1.jpg')">
+            <img src="images/campus_1.jpg" alt="Campus Photo 1" onerror="this.parentElement.innerHTML='<div class=\'gallery-placeholder\'><div class=\'gp-icon\'>📷</div><div class=\'gp-label\'>Photo coming soon</div></div>'">
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/campus_2.jpg')">
+            <img src="images/campus_2.jpg" alt="Campus Photo 2" onerror="this.parentElement.innerHTML='<div class=\'gallery-placeholder\'><div class=\'gp-icon\'>📷</div><div class=\'gp-label\'>Photo coming soon</div></div>'">
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/campus_3.jpg')">
+            <img src="images/campus_3.jpg" alt="Campus Photo 3" onerror="this.parentElement.innerHTML='<div class=\'gallery-placeholder\'><div class=\'gp-icon\'>📷</div><div class=\'gp-label\'>Photo coming soon</div></div>'">
+          </div>
+          <div class="gallery-slide" onclick="openDetailLightbox('images/campus_4.jpg')">
+            <img src="images/campus_4.jpg" alt="Campus Photo 4" onerror="this.parentElement.innerHTML='<div class=\'gallery-placeholder\'><div class=\'gp-icon\'>📷</div><div class=\'gp-label\'>Photo coming soon</div></div>'">
+          </div>
+        </div>
+      </div>
+
+      <div class="gallery-dots" id="galleryDots">
+        <div class="gallery-dot active" onclick="goToSlide(0)"></div>
+        <div class="gallery-dot" onclick="goToSlide(1)"></div>
+        <div class="gallery-dot" onclick="goToSlide(2)"></div>
+        <div class="gallery-dot" onclick="goToSlide(3)"></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CONTACT CARD -->
+    <div class="contact-card">
+      <div class="contact-text">
+        <h3>Get in Touch</h3>
+        <p>Reach out to the PUP Maragondon campus office for inquiries about admissions, facilities, or academic programs.</p>
+      </div>
+      <div class="contact-links">
+        <a href="mailto:pupmaragondon@pup.edu.ph" class="contact-link primary">
+          ✉️ &nbsp; Send Email
+        </a>
+        <a href="#" class="contact-link secondary">
+          📞 &nbsp; Call Office
+        </a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="lightbox" id="detailLightbox" onclick="closeDetailLightbox()">
+  <button class="lb-close" onclick="closeDetailLightbox()">✕</button>
+  <img id="detailLightboxImg" src="" alt="">
+</div>
+
+<script>
+  /* ── SCROLL: sticky nav ── */
+  const nav = document.getElementById('nav');
+  const heroImg = document.getElementById('heroImg');
+  const heroH = window.innerHeight;
+
+  window.addEventListener('scroll', () => {
+    const scrollY = window.scrollY;
+    const progress = Math.min(scrollY / (heroH * 0.6), 1);
+    nav.classList.toggle('scrolled', scrollY > 60);
+    if (heroImg) {
+      heroImg.style.transform = `scale(${1 + progress * 0.08}) translateY(${scrollY * 0.175}px)`;
+    }
+  }, { passive: true });
+
+  /* ── GALLERY CAROUSEL ── */
+  const track = document.getElementById('galleryTrack');
+  const dots = document.querySelectorAll('.gallery-dot');
+  let currentSlide = 0;
+  const totalSlides = dots.length;
+
+  function updateGallery() {
+    if (!track.children[0]) return;
+    const slideW = track.children[0].offsetWidth;
+    if (slideW === 0) return;
+    track.style.transform = `translateX(-${currentSlide * (slideW + 16)}px)`;
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+  }
+
+  function slideGallery(dir) {
+    currentSlide = Math.max(0, Math.min(totalSlides - 1, currentSlide + dir));
+    updateGallery();
+  }
+
+  function goToSlide(i) { currentSlide = i; updateGallery(); }
+
+  window.addEventListener('resize', updateGallery);
+
+  /* ── LIGHTBOX ── */
+  function openDetailLightbox(src) {
+    document.getElementById('detailLightboxImg').src = src;
+    document.getElementById('detailLightbox').classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeDetailLightbox() {
+    document.getElementById('detailLightbox').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetailLightbox(); });
+
+  /* ── VIDEO PLAYER ── */
+  (function () {
+    const mainVideo   = document.getElementById('mainVideoEl');
+    const mainIframe  = document.getElementById('mainIframeEl');
+    const placeholder = document.getElementById('videoPlaceholder');
+    const thumbEls    = document.querySelectorAll('.video-thumb');
+    const countLabel  = document.getElementById('videoCountLabel');
+
+    if (countLabel) {
+      countLabel.textContent = thumbEls.length + ' Video' + (thumbEls.length !== 1 ? 's' : '');
+    }
+
+    window.playVideo = function (index) {
+      const thumb = thumbEls[index];
+      if (!thumb) return;
+
+      const type = thumb.dataset.type;
+      const src  = thumb.dataset.src;
+
+      thumbEls.forEach(t => t.classList.remove('active'));
+      thumb.classList.add('active');
+      if (placeholder) placeholder.classList.add('hidden');
+
+      if (type === 'youtube') {
+        mainVideo.pause();
+        mainVideo.style.display = 'none';
+        mainIframe.style.display = 'block';
+        mainIframe.src = src.includes('?') ? src + '&autoplay=1' : src + '?autoplay=1';
+      } else {
+        mainIframe.src = '';
+        mainIframe.style.display = 'none';
+        mainVideo.style.display = 'block';
+        mainVideo.src = src;
+        mainVideo.load();
+        mainVideo.play().catch(() => {});
+      }
+    };
+  })();
+</script>
+</body>
+</html> 
