@@ -141,9 +141,9 @@ interactivemap/
 
 > _Add screenshots below by placing images in the `images/` folder and updating the paths._
 
-| Main Map | Building Popup | Detail Page | Floor Plan |
+| Main Map | Detail Page | Floor Plan |
 |:---:|:---:|:---:|:---:|
-| ![Map](images/screenshot_map.png) | ![Popup](images/screenshot_popup.png) | ![Detail](images/screenshot_detail.png) | ![Floorplan](images/screenshot_fplan.png) |
+| ![Map](images/screenshot1.png) | ![Detail](images/screenshot2.png) | ![Floorplan](images/screenshot3.png) |
 
 ---
 
