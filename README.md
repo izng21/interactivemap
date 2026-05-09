@@ -27,7 +27,7 @@ Tap any building to explore its details, floor plans, and photos — no app, no 
 
 The **PUP Maragondon Campus Interactive Map** is a zero-dependency, browser-based navigation tool built with pure HTML, CSS, and vanilla JavaScript. Students, faculty, and visitors can visually explore the campus — click or tap any building to instantly see its purpose, operating hours, contact info, floor plan, and photo gallery.
 
-> 🎓 Officially built for **Polytechnic University of the Philippines – Maragondon Campus**, Maragondon, Cavite.
+> 🎓 Officially built for Level 3 Accreditation of **Polytechnic University of the Philippines – Maragondon Campus**, Maragondon, Cavite.
 
 ---
 
@@ -166,8 +166,10 @@ All campus photos and assets are property of the Polytechnic University of the P
 
 <div align="center">
 
-Made with ❤️ for **PUP – Maragondon Campus**<br>
+Made with the help of fellow IT students of **PUP – Maragondon Campus**<br>
 Maragondon, Cavite, Philippines
+
+Developed by: Bruce B. Almaden
 
 <br/>
 
