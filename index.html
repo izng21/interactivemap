@@ -2,11 +2,21 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PUP Maragondon Campus Map</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a2e1a; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+  html, body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #1a2e1a;
+    height: 100%;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    width: 100%;
+  }
+  body { flex: 1; }
 
   .header {
     background: #fff;
@@ -76,6 +86,8 @@
     background: #ffffff;
     cursor: grab;
     user-select: none;
+    width: 100%;
+    min-height: 0; /* critical for flex children to shrink */
   }
   .map-outer.panning { cursor: grabbing; }
 
@@ -320,18 +332,36 @@
   }
   .lightbox-close:hover { background: rgba(255,255,255,0.3); }
 
-  /* ── Mobile overrides ── */
-  @media (hover: none) and (pointer: coarse) {
-    .zone { min-width: 32px; min-height: 32px; }
-    .zone .zone-pin { display: none; }
-    .zoom-btn { width: 52px; height: 52px; font-size: 26px; border-radius: 14px; }
-    .zoom-controls { bottom: 20px; right: 14px; gap: 8px; }
-    .header-hint { display: none; }
-    .header-text h1 { font-size: 13px; }
+  /* ── Mobile overrides — use max-width for reliable mobile detection ── */
+  @media (max-width: 768px) {
+    .header {
+      padding: 8px 10px;
+      gap: 8px;
+      min-height: 52px;
+    }
+    .school-logo { width: 36px; height: 36px; font-size: 18px; }
+    .header-text h1 { font-size: 12px; }
     .header-text p { display: none; }
+    .header-hint { display: none; }
+
+    /* Icon-only back button */
     .btn-main-page .btn-label { display: none; }
-    .btn-main-page { padding: 8px 12px; border-radius: 50%; width: 38px; height: 38px; justify-content: center; }
-    /* Bottom sheet popup */
+    .btn-main-page {
+      margin-left: 0;
+      padding: 0;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    /* Larger zoom controls */
+    .zoom-btn { width: 50px; height: 50px; font-size: 24px; border-radius: 14px; }
+    .zoom-controls { bottom: 16px; right: 12px; gap: 8px; }
+
+    /* Full-width bottom sheet popup */
     .popup-overlay {
       padding: 0;
       align-items: flex-end;
@@ -340,16 +370,17 @@
     .popup-card {
       width: 100%;
       border-radius: 20px 20px 0 0;
-      padding-bottom: env(safe-area-inset-bottom, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 8px);
     }
-    /* Larger tap area for popup buttons */
     .btn { padding: 12px 14px; font-size: 13px; }
+
+    /* Zones — ensure minimum tap size */
+    .zone { min-width: 32px; min-height: 32px; }
+    .zone .zone-pin { display: none; }
   }
 
-  /* ── Small screens (≤ 400px): hide subtitle text ── */
   @media (max-width: 400px) {
-    .header-text p { display: none; }
-    .header-text h1 { font-size: 12px; }
+    .header-text h1 { font-size: 11px; }
   }
   /* ── Zone tap ripple for touch devices ── */
   @keyframes zonePulse {
@@ -603,7 +634,7 @@ const buildings = {
 };
 
 /* Update hint text for touch devices */
-if (window.matchMedia('(hover: none) and (pointer: coarse)').matches) {
+if (window.matchMedia('(max-width: 768px)').matches || ('ontouchstart' in window)) {
   const hint = document.getElementById('headerHint');
   if (hint) hint.textContent = '👆 Tap a building · Pinch to zoom';
 }
@@ -637,13 +668,15 @@ function clamp() {
 function fitToView() {
   const ow = outer.clientWidth;
   const oh = outer.clientHeight;
-  // On portrait mobile, fit to width for a nicer initial view
   const scaleW = ow / imgW;
   const scaleH = oh / imgH;
-  scale = Math.min(scaleW, scaleH);
-  // On narrow screens bias slightly toward width-fit so map fills horizontally
-  if (ow < 600 && scaleW > scaleH) scale = scaleW;
-  minScale = Math.min(scale * 0.5, scaleH * 0.8);
+  // On mobile (portrait), fit to width so the map fills the screen edge-to-edge
+  if (ow <= 768) {
+    scale = scaleW;
+  } else {
+    scale = Math.min(scaleW, scaleH);
+  }
+  minScale = Math.min(scale * 0.5, Math.min(scaleW, scaleH) * 0.8);
   tx = (ow - imgW * scale) / 2;
   ty = (oh - imgH * scale) / 2;
   commit();
