@@ -116,6 +116,7 @@ interactivemap/
 ├── index.html                  # 🗺️  Main map — 16 clickable building zones
 ├── PUP_MC_MAP.png              # 📸  Campus map base image
 ├── images/                     # 🖼️  Building photos, logo, gallery assets
+├── videos/                     # 🎞   Video Tours of Buildings and Campus
 │
 │   ╔══ Building Detail Pages ══╗
 ├── eb_detail.html              # Engineering Building
