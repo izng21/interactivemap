@@ -139,10 +139,8 @@ interactivemap/
 
 ## 📸 Screenshots
 
-> _Add screenshots below by placing images in the `images/` folder and updating the paths._
-
 | Main Map | Detail Page | Floor Plan |
-|:---:|:---:|:---:|:---:|
+|:---:|:---:|:---:|
 | ![Map](images/screenshot1.png) | ![Detail](images/screenshot2.png) | ![Floorplan](images/screenshot3.png) |
 
 ---
