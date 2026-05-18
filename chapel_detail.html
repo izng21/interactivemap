@@ -1199,18 +1199,36 @@
   window.addEventListener('resize', updateGallery);
 
   /* ── LIGHTBOX ── */
-  function openDetailLightbox(src) {
-    document.getElementById('detailLightboxImg').src = src;
-    document.getElementById('detailLightbox').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
+let lightboxIndex = -1;
+const gallerySlides = document.querySelectorAll('.gallery-slide img');
 
-  function closeDetailLightbox() {
-    document.getElementById('detailLightbox').classList.remove('active');
-    document.body.style.overflow = '';
-  }
+function openDetailLightbox(src) {
+  // Find which index was clicked
+  lightboxIndex = Array.from(gallerySlides).findIndex(img => img.src.endsWith(src.split('/').pop()));
+  document.getElementById('detailLightboxImg').src = src;
+  document.getElementById('detailLightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetailLightbox(); });
+function navigateLightbox(dir) {
+  lightboxIndex = (lightboxIndex + dir + gallerySlides.length) % gallerySlides.length;
+  document.getElementById('detailLightboxImg').src = gallerySlides[lightboxIndex].src;
+}
+
+function closeDetailLightbox() {
+  document.getElementById('detailLightbox').classList.remove('active');
+  document.body.style.overflow = '';
+  lightboxIndex = -1;
+}
+
+document.addEventListener('keydown', e => {
+  const isOpen = document.getElementById('detailLightbox').classList.contains('active');
+  if (e.key === 'Escape') closeDetailLightbox();
+  if (isOpen && e.key === 'ArrowLeft')  navigateLightbox(-1);
+  if (isOpen && e.key === 'ArrowRight') navigateLightbox(1);
+  if (!isOpen && e.key === 'ArrowLeft')  slideGallery(-1);
+  if (!isOpen && e.key === 'ArrowRight') slideGallery(1);
+});
 
   /* ── VIDEO PLAYER ── */
   (function () {
