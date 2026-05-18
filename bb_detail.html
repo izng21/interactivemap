@@ -1071,7 +1071,7 @@
       <div class="video-thumbs" id="videoThumbs">
 
         <div class="video-thumb active" data-index="0"
-             data-type="local" data-src="videos/bb_video1.mp4"
+             data-type="youtube" data-src="https://www.youtube.com/embed/u3hkcXtK_C8?si=IFz6B0uqHbg-OGFz"
              onclick="playVideo(0)">
           <img src="images/bbthumb1.jpg" alt="Video 1 thumbnail">
           <div class="video-thumb-overlay">
@@ -1083,7 +1083,7 @@
         </div>
 
         <div class="video-thumb" data-index="1"
-             data-type="local" data-src="videos/bb_video2.mp4"
+             data-type="youtube" data-src="https://www.youtube.com/embed/9NIAO0JDbNY?si=tIw54hdIMX-FM955"
              onclick="playVideo(1)">
           <img src="images/bbthumb2.jpg" alt="Video 2 thumbnail">
           <div class="video-thumb-overlay">
@@ -1095,7 +1095,7 @@
         </div>
 
         <div class="video-thumb" data-index="1"
-             data-type="local" data-src="videos/bb_video2.mp4"
+             data-type="youtube" data-src="https://www.youtube.com/embed/YD38L0bv4vE?si=HIZUHXk_t_6I00dr"
              onclick="playVideo(2)">
           <img src="images/bbthumb2.jpg" alt="Video 3 thumbnail">
           <div class="video-thumb-overlay">
@@ -1134,23 +1134,23 @@
 
       <div class="gallery-track-outer">
         <div class="gallery-track" id="galleryTrack">
-          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb1.jpg')">
-            <img src="images/buildingb1.jpg" alt="Building B" >
+          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb1.jpeg')">
+            <img src="images/buildingb1.jpeg" alt="Building B" >
           </div>
-          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb2.jpg')">
-            <img src="images/buildingb2.jpg" alt="Building B" >
+          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb2.jpeg')">
+            <img src="images/buildingb2.jpeg" alt="Building B" >
           </div>
-          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb3.jpg')">
-            <img src="images/buildingb3.jpg" alt="Building B" >
+          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb3.jpeg')">
+            <img src="images/buildingb3.jpeg" alt="Building B" >
           </div>
-          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb4.jpg')">
-            <img src="images/buildingb4.jpg" alt="Building B" >
+          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb4.jpeg')">
+            <img src="images/buildingb4.jpeg" alt="Building B" >
           </div>
-          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb5.jpg')">
-            <img src="images/buildingb5.jpg" alt="Building B" >
+          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb5.jpeg')">
+            <img src="images/buildingb5.jpeg" alt="Building B" >
           </div>
-          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb6.jpg')">
-            <img src="images/buildingb6.jpg" alt="Building B" >
+          <div class="gallery-slide" onclick="openDetailLightbox('images/buildingb6.jpeg')">
+            <img src="images/buildingb6.jpeg" alt="Building B" >
           </div>
         </div>
       </div>
@@ -1242,20 +1242,36 @@
   window.addEventListener('resize', updateGallery);
 
   /* ── LIGHTBOX ── */
-  function openDetailLightbox(src) {
-    document.getElementById('detailLightboxImg').src = src;
-    document.getElementById('detailLightbox').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
+let lightboxIndex = -1;
+const gallerySlides = document.querySelectorAll('.gallery-slide img');
 
-  function closeDetailLightbox() {
-    document.getElementById('detailLightbox').classList.remove('active');
-    document.body.style.overflow = '';
-  }
+function openDetailLightbox(src) {
+  // Find which index was clicked
+  lightboxIndex = Array.from(gallerySlides).findIndex(img => img.src.endsWith(src.split('/').pop()));
+  document.getElementById('detailLightboxImg').src = src;
+  document.getElementById('detailLightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDetailLightbox();
-  });
+function navigateLightbox(dir) {
+  lightboxIndex = (lightboxIndex + dir + gallerySlides.length) % gallerySlides.length;
+  document.getElementById('detailLightboxImg').src = gallerySlides[lightboxIndex].src;
+}
+
+function closeDetailLightbox() {
+  document.getElementById('detailLightbox').classList.remove('active');
+  document.body.style.overflow = '';
+  lightboxIndex = -1;
+}
+
+document.addEventListener('keydown', e => {
+  const isOpen = document.getElementById('detailLightbox').classList.contains('active');
+  if (e.key === 'Escape') closeDetailLightbox();
+  if (isOpen && e.key === 'ArrowLeft')  navigateLightbox(-1);
+  if (isOpen && e.key === 'ArrowRight') navigateLightbox(1);
+  if (!isOpen && e.key === 'ArrowLeft')  slideGallery(-1);
+  if (!isOpen && e.key === 'ArrowRight') slideGallery(1);
+});
 
   /* ── VIDEO PLAYER ── */
 (function () {
