@@ -1111,9 +1111,9 @@
         </div>
 
         <div class="video-thumb" data-index="1"
-             data-type="youtube" data-src="https://www.youtube.com/embed/Ozni6qgP_7Y?si=6OSpH6IG__0m3BqO"
+             data-type="youtube" data-src="https://www.youtube.com/embed/lGrgHqHX7h4?si=NVZYJ8th9INmosW-"
              onclick="playVideo(1)">
-          <img src="images/engrthumb2.jpg" alt="Video 2 thumbnail">
+          <img src="https://img.youtube.com/vi/lGrgHqHX7h4/hqdefault.jpg" alt="Video 2 thumbnail">
           <div class="video-thumb-overlay">
             <div class="thumb-play">
               <svg viewBox="0 0 16 16" fill="#333"><polygon points="4,2 13,8 4,14"/></svg>
@@ -1123,9 +1123,9 @@
         </div>
 
         <div class="video-thumb" data-index="2"
-             data-type="local" data-src="videos/engr_video3.mp4"
+             data-type="youtube" data-src="https://www.youtube.com/embed/QutUGNzfuuY?si=K-QNpYWDMSmX5dZi"
              onclick="playVideo(2)">
-          <img src="images/engrthumb3.jpg" alt="Video 3 thumbnail">
+          <img src="https://img.youtube.com/vi/QutUGNzfuuY/hqdefault.jpg" alt="Video 3 thumbnail">
           <div class="video-thumb-overlay">
             <div class="thumb-play">
               <svg viewBox="0 0 16 16" fill="#333"><polygon points="4,2 13,8 4,14"/></svg>
@@ -1312,20 +1312,36 @@
   window.addEventListener('resize', updateGallery);
 
   /* ── LIGHTBOX ── */
-  function openDetailLightbox(src) {
-    document.getElementById('detailLightboxImg').src = src;
-    document.getElementById('detailLightbox').classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
+let lightboxIndex = -1;
+const gallerySlides = document.querySelectorAll('.gallery-slide img');
 
-  function closeDetailLightbox() {
-    document.getElementById('detailLightbox').classList.remove('active');
-    document.body.style.overflow = '';
-  }
+function openDetailLightbox(src) {
+  // Find which index was clicked
+  lightboxIndex = Array.from(gallerySlides).findIndex(img => img.src.endsWith(src.split('/').pop()));
+  document.getElementById('detailLightboxImg').src = src;
+  document.getElementById('detailLightbox').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeDetailLightbox();
-  });
+function navigateLightbox(dir) {
+  lightboxIndex = (lightboxIndex + dir + gallerySlides.length) % gallerySlides.length;
+  document.getElementById('detailLightboxImg').src = gallerySlides[lightboxIndex].src;
+}
+
+function closeDetailLightbox() {
+  document.getElementById('detailLightbox').classList.remove('active');
+  document.body.style.overflow = '';
+  lightboxIndex = -1;
+}
+
+document.addEventListener('keydown', e => {
+  const isOpen = document.getElementById('detailLightbox').classList.contains('active');
+  if (e.key === 'Escape') closeDetailLightbox();
+  if (isOpen && e.key === 'ArrowLeft')  navigateLightbox(-1);
+  if (isOpen && e.key === 'ArrowRight') navigateLightbox(1);
+  if (!isOpen && e.key === 'ArrowLeft')  slideGallery(-1);
+  if (!isOpen && e.key === 'ArrowRight') slideGallery(1);
+});
 
   /* ── VIDEO PLAYER ── */
   const mainVideo  = document.getElementById('mainVideoEl');
