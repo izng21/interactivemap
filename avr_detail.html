@@ -1049,9 +1049,9 @@
       <div class="video-thumbs" id="videoThumbs">
 
         <div class="video-thumb active" data-index="0"
-             data-type="youtube" data-src="https://www.youtube.com/embed/jBaSD9uiJ1w?si=tSkASWeCOhuzijnM"
+             data-type="youtube" data-src="https://www.youtube.com/embed/4dkRLK26hms?si=TjYBm7sGdSI1i46T"
              onclick="playVideo(0)">
-          <img src="https://img.youtube.com/vi/jBaSD9uiJ1w/hqdefault.jpg" alt="Video 1 thumbnail">
+          <img src="https://img.youtube.com/vi/4dkRLK26hms/hqdefault.jpg" alt="Video 1 thumbnail">
           <div class="video-thumb-overlay">
             <div class="thumb-play">
               <svg viewBox="0 0 16 16" fill="#333"><polygon points="4,2 13,8 4,14"/></svg>
@@ -1212,7 +1212,11 @@
     document.body.style.overflow = '';
   }
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetailLightbox(); });
+ document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDetailLightbox();
+  if (e.key === 'ArrowLeft')  slideGallery(-1);
+  if (e.key === 'ArrowRight') slideGallery(1);
+});
 
   /* ── VIDEO PLAYER ── */
 (function () {
