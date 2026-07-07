@@ -7,6 +7,14 @@
 <link rel="icon" type="image/x-icon" href="/images/PUPLogo.png">
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+ :root {
+  --light-grey: #f2f2f2;
+  --maroon: #800000;
+  --maroon-deep: #5a0000;
+  --gold: #ffd700;
+  --gold-light: #ffe566;
+  --white: #ffffff;
+}
   html, body {
     font-family: 'Segoe UI', system-ui, sans-serif;
     background: #1a2e1a;
@@ -407,7 +415,7 @@
   #loadingScreen {
   position: fixed;
   inset: 0;
-  background: #6b1a1a;
+  background: linear-gradient(160deg, var(--maroon) 0%, var(--maroon-deep) 100%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -425,6 +433,7 @@
   height: 110px;
   border-radius: 50%;
   object-fit: cover;
+  background: var(--white);
   filter: drop-shadow(0 4px 24px rgba(0,0,0,0.4));
   animation: logoPulse 1.5s ease-in-out infinite;
   }
@@ -442,10 +451,10 @@
   .loading-bar-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, #f0d870, #ffe033);
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
   border-radius: 999px;
   transition: width 0.1s linear;
-  box-shadow: 0 0 8px rgba(255,220,50,0.6);
+  box-shadow: 0 0 8px rgba(255,215,0,0.6);
   }
 </style>
 </head>
