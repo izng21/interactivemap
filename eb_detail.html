@@ -8,19 +8,19 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --maroon: #6b1a1a;
-    --maroon-dark: #4a1010;
-    --maroon-light: #8b2525;
-    --gold: #c9a84c;
-    --gold-light: #f0d870;
-    --cream: #faf7f2;
-    --surface: #ffffff;
-    --text-primary: #1a1410;
-    --text-secondary: #6b5f56;
-    --text-muted: #a09488;
-    --border: #e8e0d8;
-    --hero-h: 100vh;
-    --nav-h: 64px;
+  --maroon: #800000;
+  --maroon-dark: #5a0000;
+  --maroon-light: #a03030;
+  --gold: #ffd700;
+  --gold-light: #ffe566;
+  --cream: #faf7f2;
+  --surface: #ffffff;
+  --text-primary: #1a1410;
+  --text-secondary: #6b5f56;
+  --text-muted: #a09488;
+  --border: #e8e0d8;
+  --hero-h: 100vh;
+  --nav-h: 60px;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -430,7 +430,7 @@
   }
 
   .video-main {
-    background: #000;
+    background: linear-gradient(160deg, var(--maroon) 0%, var(--maroon-dark) 100%);
     border-radius: 20px;
     overflow: hidden;
     position: relative;
@@ -462,7 +462,7 @@
     align-items: center;
     justify-content: center;
     gap: 16px;
-    background: linear-gradient(135deg, #1a0505 0%, #3a0a0a 50%, #1a0505 100%);
+    background: linear-gradient(135deg, var(--maroon-dark) 0%, var(--maroon) 50%, var(--maroon-dark) 100%);
     cursor: pointer;
     transition: opacity 0.3s;
   }
